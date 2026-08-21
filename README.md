@@ -1,6 +1,6 @@
 # Hermanos Jota — E-commerce de Muebles
 
-Proyecto integrador para el curso **Full Stack Developer** del **ITBA**.
+Proyecto integrador para el programa **Full Stack Developer** del **ITBA**.
 
 ---
 
@@ -8,11 +8,11 @@ Proyecto integrador para el curso **Full Stack Developer** del **ITBA**.
 
 | Integrantes |
 |-------------|
-| Integrante 1 |
-| Integrante 2 |
-| Integrante 3 |
-| Integrante 4 |
-| Integrante 5 |
+| Ojeda Ezequiel Edgardo |
+| Tobías Alí Torres Ochoa |
+| Olea Dana Liz |
+| Bustos Peña Juliana Belen |
+| Mateo Polci |
 
 ---
 

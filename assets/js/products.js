@@ -1,0 +1,238 @@
+/**
+ * Hermanos Jota — Catálogo de productos
+ * Array de objetos que simula la base de datos del catálogo.
+ * Cada producto tiene la información necesaria para las tarjetas
+ * (productos.html, destacados en index.html) y para el detalle (producto.html).
+ */
+
+const PRODUCTOS = [
+  {
+    id: 1,
+    slug: "aparador-uspallata",
+    nombre: "Aparador Uspallata",
+    categoria: "living",
+    precio: 950000,
+    imagen: "assets/img/aparador-uspallata.png",
+    descripcionCorta: "Aparador de seis puertas en nogal sostenible con tiradores de latón.",
+    descripcionLarga:
+      "Aparador de seis puertas fabricado en nogal sostenible con tiradores metálicos en acabado latón. Su silueta minimalista realza el veteado natural de la madera, creando una pieza que combina funcionalidad y elegancia atemporal para espacios contemporáneos.",
+    medidas: "180 × 45 × 75 cm",
+    materiales: "Nogal macizo FSC®, herrajes de latón",
+    acabado: "Aceite natural ecológico",
+    peso: "68 kg",
+    detalleExtra: "Capacidad: 6 compartimentos interiores",
+    destacado: true
+  },
+  {
+    id: 2,
+    slug: "biblioteca-recoleta",
+    nombre: "Biblioteca Recoleta",
+    categoria: "living",
+    precio: 680000,
+    imagen: "assets/img/biblioteca-recoleta.png",
+    descripcionCorta: "Sistema modular de estantes en acero Sage Green y roble claro.",
+    descripcionLarga:
+      "Sistema modular de estantes abierto que combina estructura de acero Sage Green y repisas en roble claro. Perfecta para colecciones y objetos de diseño, su diseño versátil se adapta a cualquier espacio contemporáneo con elegancia funcional.",
+    medidas: "100 × 35 × 200 cm",
+    materiales: "Estructura de acero, estantes de roble",
+    acabado: "Laca mate ecológica",
+    peso: "Capacidad 45 kg por estante",
+    detalleExtra: "5 estantes ajustables",
+    destacado: false
+  },
+  {
+    id: 3,
+    slug: "butaca-mendoza",
+    nombre: "Butaca Mendoza",
+    categoria: "living",
+    precio: 540000,
+    imagen: "assets/img/butaca-mendoza.png",
+    descripcionCorta: "Butaca tapizada en bouclé Dusty Rose con base de guatambú.",
+    descripcionLarga:
+      "Butaca tapizada en bouclé Dusty Rose con base de madera de guatambú. El respaldo curvo abraza el cuerpo y ofrece máximo confort, mientras que su diseño orgánico aporta calidez y sofisticación a cualquier ambiente contemporáneo.",
+    medidas: "80 × 75 × 85 cm",
+    materiales: "Guatambú macizo, tela bouclé",
+    acabado: "Cera vegetal, tapizado premium",
+    peso: "Tapizado repelente al agua y manchas",
+    detalleExtra: "Confort: espuma de alta densidad",
+    destacado: false
+  },
+  {
+    id: 4,
+    slug: "sillon-copacabana",
+    nombre: "Sillón Copacabana",
+    categoria: "living",
+    precio: 890000,
+    imagen: "assets/img/sillon-copacabana.png",
+    descripcionCorta: "Sillón lounge giratorio en cuero cognac, inspirado en los años 60.",
+    descripcionLarga:
+      "Sillón lounge en cuero cognac con base giratoria en acero Burnt Sienna. Inspirado en la estética brasilera moderna de los 60, combina comodidad excepcional con un diseño icónico que trasciende tendencias y épocas.",
+    medidas: "90 × 85 × 95 cm",
+    materiales: "Cuero curtido vegetal, acero pintado",
+    acabado: "Cuero anilina premium",
+    peso: "Rotación 360° silenciosa y suave",
+    detalleExtra: "Garantía: 10 años en estructura",
+    destacado: true
+  },
+  {
+    id: 5,
+    slug: "mesa-araucaria",
+    nombre: "Mesa de Centro Araucaria",
+    categoria: "living",
+    precio: 610000,
+    imagen: "assets/img/mesa-araucaria.png",
+    descripcionCorta: "Sobre circular de mármol Patagonia sobre base de nogal.",
+    descripcionLarga:
+      "Mesa de centro con sobre circular de mármol Patagonia y base de tres patas en madera de nogal. Su diseño minimalista se convierte en el punto focal perfecto para cualquier sala de estar contemporánea, combinando la frialdad del mármol con la calidez de la madera.",
+    medidas: "90 × 90 × 45 cm",
+    materiales: "Sobre de mármol Patagonia, patas de nogal",
+    acabado: "Mármol pulido, aceite natural en madera",
+    peso: "42 kg",
+    detalleExtra: "Carga máxima: 25 kg distribuidos",
+    destacado: false
+  },
+  {
+    id: 6,
+    slug: "mesa-aconcagua",
+    nombre: "Mesa de Noche Aconcagua",
+    categoria: "dormitorio",
+    precio: 275000,
+    imagen: "assets/img/mesa-aconcagua.png",
+    descripcionCorta: "Mesa de noche con cajón oculto en roble certificado FSC®.",
+    descripcionLarga:
+      "Mesa de noche con cajón oculto y repisa inferior en roble certificado FSC®. Su diseño limpio y funcional permite convivir con diferentes estilos de dormitorio, ofreciendo almacenamiento discreto y elegante para objetos personales.",
+    medidas: "45 × 35 × 60 cm",
+    materiales: "Roble macizo FSC®, herrajes soft-close",
+    acabado: "Barniz mate de poliuretano",
+    peso: "1 cajón + repisa inferior",
+    detalleExtra: "Cajón con cierre suave",
+    destacado: false
+  },
+  {
+    id: 7,
+    slug: "sofa-patagonia",
+    nombre: "Sofá Patagonia",
+    categoria: "living",
+    precio: 1250000,
+    imagen: "assets/img/sofa-patagonia.png",
+    descripcionCorta: "Sofá de tres cuerpos en lino Warm Alabaster, 100% reciclable.",
+    descripcionLarga:
+      "Sofá de tres cuerpos tapizado en lino Warm Alabaster con patas cónicas de madera. Los cojines combinan espuma de alta resiliencia con plumón reciclado, ofreciendo comodidad duradera y sostenible para el hogar moderno.",
+    medidas: "220 × 90 × 80 cm",
+    materiales: "Madera de eucalipto certificada FSC®, lino 100% natural premium",
+    acabado: "Espuma HR + plumón reciclado",
+    peso: "Materiales 100% reciclables",
+    detalleExtra: "Estructura en madera de eucalipto certificada FSC®",
+    destacado: true
+  },
+  {
+    id: 8,
+    slug: "mesa-pampa",
+    nombre: "Mesa Comedor Pampa",
+    categoria: "comedor",
+    precio: 980000,
+    imagen: "assets/img/mesa-pampa.png",
+    descripcionCorta: "Mesa extensible de roble macizo para 6 a 10 comensales.",
+    descripcionLarga:
+      "Mesa extensible de roble macizo con tablero biselado y sistema de apertura suave. Su diseño robusto y elegante se adapta perfectamente a reuniones íntimas o grandes celebraciones familiares, extendiéndose de 6 a 10 comensales.",
+    medidas: "160-240 × 90 × 75 cm",
+    materiales: "Roble macizo FSC®, mecanismo alemán",
+    acabado: "Aceite-cera natural",
+    peso: "Capacidad: 6-10 comensales",
+    detalleExtra: "Extensión con sistema de mariposa central",
+    destacado: true
+  },
+  {
+    id: 9,
+    slug: "sillas-cordoba",
+    nombre: "Sillas Córdoba (set x4)",
+    categoria: "comedor",
+    precio: 420000,
+    imagen: "assets/img/sillas-cordoba.png",
+    descripcionCorta: "Set de 4 sillas apilables en nogal y estructura Sage Green.",
+    descripcionLarga:
+      "Set de cuatro sillas apilables en contrachapado moldeado de nogal y estructura tubular pintada en Sage Green. Su diseño ergonómico y materiales de calidad garantizan comodidad y durabilidad en el uso diario, perfectas para comedores contemporáneos.",
+    medidas: "45 × 52 × 80 cm (cada una)",
+    materiales: "Contrachapado de nogal, tubo de acero",
+    acabado: "Laca mate, pintura epoxi",
+    peso: "Apilables hasta 6 sillas",
+    detalleExtra: "Incluye set de 4 sillas",
+    destacado: false
+  },
+  {
+    id: 10,
+    slug: "escritorio-costa",
+    nombre: "Escritorio Costa",
+    categoria: "oficina",
+    precio: 465000,
+    imagen: "assets/img/escritorio-costa.png",
+    descripcionCorta: "Escritorio compacto en bambú laminado con pasacables integrado.",
+    descripcionLarga:
+      "Escritorio compacto con cajón organizado y tapa pasacables integrada en bambú laminado. Ideal para espacios de trabajo en casa, combina funcionalidad moderna con estética minimalista y sostenible, perfecto para el trabajo remoto.",
+    medidas: "120 × 60 × 75 cm",
+    materiales: "Bambú laminado, herrajes ocultos",
+    acabado: "Laca mate resistente",
+    peso: "1 cajón con organizador",
+    detalleExtra: "Pasacables integrado",
+    destacado: false
+  },
+  {
+    id: 11,
+    slug: "silla-belgrano",
+    nombre: "Silla de Trabajo Belgrano",
+    categoria: "oficina",
+    precio: 385000,
+    imagen: "assets/img/silla-belgrano.png",
+    descripcionCorta: "Silla ergonómica con respaldo de malla y tejido reciclado.",
+    descripcionLarga:
+      "Silla ergonómica regulable en altura con respaldo de malla transpirable y asiento tapizado en tejido reciclado. Diseñada para largas jornadas de trabajo con máximo confort y apoyo lumbar, ideal para oficinas en casa y espacios de coworking.",
+    medidas: "60 × 60 × 90-100 cm",
+    materiales: "Malla técnica, tejido reciclado",
+    acabado: "Base cromada, tapizado premium",
+    peso: "Regulación: altura + inclinación de respaldo",
+    detalleExtra: "Certificación de ergonomía europea EN 1335",
+    destacado: false
+  }
+];
+
+const CATEGORIAS = [
+  { valor: "todas", etiqueta: "Todas" },
+  { valor: "living", etiqueta: "Living" },
+  { valor: "comedor", etiqueta: "Comedor" },
+  { valor: "dormitorio", etiqueta: "Dormitorio" },
+  { valor: "oficina", etiqueta: "Oficina" }
+];
+
+/**
+ * Simula una petición asíncrona al "servidor" (en realidad, lee el array local).
+ * Se usa async/await + una demora artificial con setTimeout para practicar
+ * el manejo de datos que tardan en llegar.
+ */
+function obtenerProductos() {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(PRODUCTOS);
+    }, 400);
+  });
+}
+
+function obtenerProductoPorSlug(slug) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const producto = PRODUCTOS.find((p) => p.slug === slug);
+      if (producto) {
+        resolve(producto);
+      } else {
+        reject(new Error("Producto no encontrado"));
+      }
+    }, 300);
+  });
+}
+
+function formatearPrecio(valor) {
+  return valor.toLocaleString("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 0
+  });
+}

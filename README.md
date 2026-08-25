@@ -12,7 +12,6 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**.
 | Tobías Alí Torres Ochoa |
 | Olea Dana Liz |
 | Bustos Peña Juliana Belen |
-| Mateo Polci |
 
 ---
 

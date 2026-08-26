@@ -332,6 +332,10 @@ button {
   order: 10;
 }
 
+.site-nav a::before {
+  margin-right: 6px;
+}
+
 .site-nav.is-open {
   max-height: 400px;
   opacity: 1;

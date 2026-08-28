@@ -7,13 +7,21 @@ let TODOS_LOS_PRODUCTOS = [];
 let categoriaActiva = "todas";
 let terminoBusqueda = "";
 
-function crearTarjetaProductoCatalogo(producto) {
+function crearTarjetaProductoCatalogo(producto, esPrioritaria) {
   const article = document.createElement("article");
   article.className = "product-card";
 
+  // Las primeras tarjetas quedan arriba del fold apenas carga la grilla:
+  // se cargan de forma eager/alta prioridad. El resto sigue en "lazy"
+  // para no gastar ancho de banda en imágenes que el usuario todavía
+  // no ve.
+  const atributosImg = esPrioritaria
+    ? `loading="eager" fetchpriority="high"`
+    : `loading="lazy"`;
+
   article.innerHTML = `
     <a href="producto.html?slug=${producto.slug}" class="product-card__media">
-      <img src="${producto.imagen}" alt="${producto.nombre}" loading="lazy">
+      <img src="${producto.imagen}" alt="${producto.nombre}" ${atributosImg} decoding="async">
     </a>
     <div class="product-card__body">
       <span class="product-card__category">${producto.categoria}</span>
@@ -84,8 +92,11 @@ function aplicarFiltros() {
 
   vacio.hidden = true;
   grid.hidden = false;
-  resultado.forEach((producto) => {
-    grid.appendChild(crearTarjetaProductoCatalogo(producto));
+  const CANTIDAD_PRIORITARIA = 4; // tarjetas visibles sin scroll (aprox.)
+  resultado.forEach((producto, indice) => {
+    grid.appendChild(
+      crearTarjetaProductoCatalogo(producto, indice < CANTIDAD_PRIORITARIA)
+    );
   });
 }
 

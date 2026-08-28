@@ -55,6 +55,9 @@ body {
   color: var(--color-ink);
   background: var(--color-crema);
   -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
  
 /* Cuando el carrito está abierto, bloqueamos el scroll del body */
@@ -1445,7 +1448,7 @@ button {
   background: var(--color-ink);
   color: rgba(255, 255, 255, 0.75);
   padding: 3rem 0 1.5rem;
-  margin-top: 2rem;
+  margin-top: auto;
 }
  
 .footer-grid {

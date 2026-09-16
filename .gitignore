@@ -1,0 +1,28 @@
+# Dependencias
+node_modules/
+**/node_modules/
+
+# Builds
+client/dist/
+client/build/
+backend/dist/
+
+# Variables de entorno
+.env
+.env.local
+**/.env
+**/.env.local
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# Editor / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Cobertura de tests
+coverage/

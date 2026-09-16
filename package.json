@@ -1,0 +1,41 @@
+{
+  "name": "hermanos-jota",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Proyecto integrador Full Stack: API REST con Node.js/Express + cliente React para el e-commerce de muebles Hermanos Jota.",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "@eslint/js": "^9.13.0",
+    "eslint": "^9.13.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "globals": "^15.11.0",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3"
+  },
+  "lint-staged": {
+    "backend/**/*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "client/**/*.{js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "**/*.{json,md,css,html}": [
+      "prettier --write"
+    ]
+  }
+}

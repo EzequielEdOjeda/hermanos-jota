@@ -1,0 +1,30 @@
+node_modules
+**/node_modules
+
+# Builds
+dist
+build
+client/dist
+client/build
+
+# Dependencias y locks
+package-lock.json
+
+# Assets binarios (no tiene sentido formatearlos)
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.svg
+**/*.ico
+
+# Logs
+*.log
+npm-debug.log*
+
+# Entornos
+.env
+.env.*
+
+# Git / editores
+.git
+.vscode

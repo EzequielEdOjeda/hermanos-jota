@@ -8,10 +8,10 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reco
 
 | Servicio | URL |
 |----------|-----|
-| 🚙 **Frontend (Mueblería Jota)** | [https://muebleria-jota-89nl.onrender.com](https://muebleria-jota-89nl.onrender.com) |
+| 🚙 **Frontend (Mueblería Jota)** | [https://hermanosjota.vercel.app/](https://hermanosjota.vercel.app/) |
 | ⚙️ **Backend API (Hermanos Jota)** | [https://hermanos-jota-6p4o.onrender.com/api](https://hermanos-jota-6p4o.onrender.com/api) |
 
-> **Nota:** Ambos servicios están desplegados en [Render](https://render.com) (plan gratuito). Pueden tardar unos segundos en "despertar" tras un periodo de inactividad.
+> **Nota:** API desplegada en [Render](https://render.com) (plan gratuito). Puede tardar unos segundos en "despertar" tras un periodo de inactividad.
 
 ---
 

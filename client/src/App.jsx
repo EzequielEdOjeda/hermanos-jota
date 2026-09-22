@@ -8,6 +8,7 @@ import ProductDetail from "./components/ProductDetail";
 import ContactForm from "./components/ContactForm";
 import CartPanel from "./components/CartPanel";
 import Toast from "./components/Toast";
+import NotFound from "./components/NotFound";
 
 import { obtenerProductos } from "./services/api";
 
@@ -28,7 +29,9 @@ function App() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
-  const [vista, setVista] = useState("inicio");
+  const rutaEnNavegador = window.location.pathname.replace("/", "");
+  const [vista, setVista] = useState(rutaEnNavegador || "inicio");
+
   const [productoSeleccionadoId, setProductoSeleccionadoId] = useState(null);
 
   const [carrito, setCarrito] = useState([]);
@@ -115,8 +118,9 @@ function App() {
   const cantidadCarrito = carrito.reduce((total, item) => total + item.cantidad, 0);
   const totalCarrito = carrito.reduce((total, item) => total + item.precio * item.cantidad, 0);
 
-  const productoSeleccionado = productos.find((p) => p.id === productoSeleccionadoId) ?? null;
-
+  const vistasValidas = ["inicio", "catalogo", "detalle", "contacto"];
+  const esVistaValida = vistasValidas.includes(vista);
+  
   return (
     <>
       <Navbar
@@ -159,6 +163,9 @@ function App() {
         )}
 
         {vista === "contacto" && <ContactForm />}
+
+        {!esVistaValida && <NotFound onNavigate={navegarA} />}
+
       </main>
 
       <Footer onNavigate={navegarA} />

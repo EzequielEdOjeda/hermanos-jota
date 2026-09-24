@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+ 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./components/Home";
@@ -9,9 +9,9 @@ import ContactForm from "./components/ContactForm";
 import CartPanel from "./components/CartPanel";
 import Toast from "./components/Toast";
 import NotFound from "./components/NotFound";
-
+ 
 import { obtenerProductos } from "./services/api";
-
+ 
 /**
  * App.jsx — componente raíz de la aplicación.
  *
@@ -28,24 +28,24 @@ function App() {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
-
+ 
   const rutaEnNavegador = window.location.pathname.replace("/", "");
   const [vista, setVista] = useState(rutaEnNavegador || "inicio");
-
+ 
   const [productoSeleccionadoId, setProductoSeleccionadoId] = useState(null);
-
+ 
   const [carrito, setCarrito] = useState([]);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [toast, setToast] = useState("");
-
+ 
   // Ciclo de vida de la petición a la API: carga -> éxito | error.
   useEffect(() => {
     let activo = true;
-
+ 
     async function cargarProductos() {
       setCargando(true);
       setError(null);
-
+ 
       try {
         const data = await obtenerProductos();
         if (activo) setProductos(data);
@@ -55,39 +55,39 @@ function App() {
         if (activo) setCargando(false);
       }
     }
-
+ 
     cargarProductos();
-
+ 
     return () => {
       activo = false;
     };
   }, []);
-
+ 
   function navegarA(destino) {
     setVista(destino);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-
+ 
   function verDetalle(id) {
     setProductoSeleccionadoId(id);
     navegarA("detalle");
   }
-
+ 
   function mostrarToast(mensaje) {
     setToast(mensaje);
     setTimeout(() => setToast(""), 2200);
   }
-
+ 
   function agregarAlCarrito(producto, cantidad = 1) {
     setCarrito((prev) => {
       const existente = prev.find((item) => item.id === producto.id);
-
+ 
       if (existente) {
         return prev.map((item) =>
           item.id === producto.id ? { ...item, cantidad: item.cantidad + cantidad } : item,
         );
       }
-
+ 
       return [
         ...prev,
         {
@@ -99,14 +99,14 @@ function App() {
         },
       ];
     });
-
+ 
     mostrarToast(`"${producto.nombre}" se añadió al carrito`);
   }
-
+ 
   function quitarDelCarrito(id) {
     setCarrito((prev) => prev.filter((item) => item.id !== id));
   }
-
+ 
   function cambiarCantidadCarrito(id, delta) {
     setCarrito((prev) =>
       prev
@@ -114,13 +114,20 @@ function App() {
         .filter((item) => item.cantidad > 0),
     );
   }
-
+ 
   const cantidadCarrito = carrito.reduce((total, item) => total + item.cantidad, 0);
   const totalCarrito = carrito.reduce((total, item) => total + item.precio * item.cantidad, 0);
-
+ 
+  // ✅ FIX: derivamos el producto completo a partir del ID seleccionado.
+  // Antes se usaba `productoSeleccionado` sin definir, lo que causaba
+  // "ReferenceError: productoSeleccionado is not defined" al abrir el detalle.
+  const productoSeleccionado = productos.find(
+    (p) => p.id === productoSeleccionadoId,
+  );
+ 
   const vistasValidas = ["inicio", "catalogo", "detalle", "contacto"];
   const esVistaValida = vistasValidas.includes(vista);
-  
+ 
   return (
     <>
       <Navbar
@@ -129,7 +136,7 @@ function App() {
         cantidadCarrito={cantidadCarrito}
         onAbrirCarrito={() => setCarritoAbierto(true)}
       />
-
+ 
       <main>
         {vista === "inicio" && (
           <Home
@@ -141,7 +148,7 @@ function App() {
             onNavigate={navegarA}
           />
         )}
-
+ 
         {vista === "catalogo" && (
           <Catalog
             productos={productos}
@@ -151,7 +158,7 @@ function App() {
             onAgregar={agregarAlCarrito}
           />
         )}
-
+ 
         {vista === "detalle" && (
           <ProductDetail
             producto={productoSeleccionado}
@@ -161,15 +168,14 @@ function App() {
             onNavigate={navegarA}
           />
         )}
-
+ 
         {vista === "contacto" && <ContactForm />}
-
+ 
         {!esVistaValida && <NotFound onNavigate={navegarA} />}
-
       </main>
-
+ 
       <Footer onNavigate={navegarA} />
-
+ 
       <CartPanel
         abierto={carritoAbierto}
         carrito={carrito}
@@ -178,10 +184,10 @@ function App() {
         onCambiarCantidad={cambiarCantidadCarrito}
         onQuitar={quitarDelCarrito}
       />
-
+ 
       <Toast mensaje={toast} />
     </>
   );
 }
-
+ 
 export default App;

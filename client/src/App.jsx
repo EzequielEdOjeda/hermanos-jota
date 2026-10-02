@@ -9,6 +9,8 @@ import ContactForm from "./components/ContactForm";
 import CartPanel from "./components/CartPanel";
 import Toast from "./components/Toast";
 import NotFound from "./components/NotFound";
+import Login from "./components/Login";
+import Register from "./components/Register";
  
 import { obtenerProductos } from "./services/api";
  
@@ -125,7 +127,7 @@ function App() {
     (p) => p.id === productoSeleccionadoId,
   );
  
-  const vistasValidas = ["inicio", "catalogo", "detalle", "contacto"];
+  const vistasValidas = ["inicio", "catalogo", "detalle", "contacto", "login", "register"];
   const esVistaValida = vistasValidas.includes(vista);
  
   return (
@@ -170,7 +172,11 @@ function App() {
         )}
  
         {vista === "contacto" && <ContactForm />}
- 
+
+        {vista === "login" && <Login onNavigate={navegarA} />}
+        
+        {vista === "register" && <Register onNavigate={navegarA} />}
+
         {!esVistaValida && <NotFound onNavigate={navegarA} />}
       </main>
  

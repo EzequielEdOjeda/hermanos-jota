@@ -113,6 +113,18 @@ function Navbar({ vista, onNavigate, cantidadCarrito, onAbrirCarrito }) {
                 Contacto
               </a>
             </li>
+            <li>
+              <a
+                href="#login"
+                className={`bi bi-person${vista === "login" ? " is-active" : ""}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navegar("login");
+                }}
+              >
+                Iniciar sesión
+              </a>
+            </li>
           </ul>
         </nav>
       </div>

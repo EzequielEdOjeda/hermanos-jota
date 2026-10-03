@@ -2,6 +2,8 @@
 
 Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reconstrucción completa del sitio como una aplicación **cliente-servidor real**, con un backend propio en **Node.js + Express** y un frontend en **React** que consume esa API vía `fetch`.
 
+![Web](image.png)
+
 ---
 
 ## 🔗 Links del Proyecto
@@ -40,12 +42,6 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reco
 - **Detalle de producto**: Imagen, descripción, especificaciones técnicas y selector de cantidad, mostrado con renderizado condicional (sin recargar la página).
 - **Carrito de compras**: Panel flotante con contador en la barra de navegación, controles de cantidad y total, manejado 100% con estado de React.
 - **Contacto**: Formulario controlado con validación en el cliente y envío real al backend (`POST /api/contacto`).
-
----
-
-## 📷 Captura
- 
-![Web](image.png)
 
 ---
 

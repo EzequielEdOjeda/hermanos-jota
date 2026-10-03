@@ -11,7 +11,7 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reco
 | 🚙 **Frontend (Mueblería Jota)** | [https://hermanosjota.vercel.app/](https://hermanosjota.vercel.app/) |
 | ⚙️ **Backend API (Hermanos Jota)** | [https://hermanos-jota-6p4o.onrender.com/api](https://hermanos-jota-6p4o.onrender.com/api) |
 
-> **Nota:** API desplegada en [Render](https://render.com) (plan gratuito). Puede tardar unos segundos en "despertar" tras un periodo de inactividad.
+> **Nota:** Con la API desplegada, puede tardar unos segundos en "despertar" tras un periodo de inactividad en Render.
 
 ---
 
@@ -40,6 +40,12 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reco
 - **Detalle de producto**: Imagen, descripción, especificaciones técnicas y selector de cantidad, mostrado con renderizado condicional (sin recargar la página).
 - **Carrito de compras**: Panel flotante con contador en la barra de navegación, controles de cantidad y total, manejado 100% con estado de React.
 - **Contacto**: Formulario controlado con validación en el cliente y envío real al backend (`POST /api/contacto`).
+
+---
+
+## 📷 Captura
+ 
+![Web](image.png)
 
 ---
 

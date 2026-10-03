@@ -277,6 +277,40 @@ button {
   order: 2;
 }
 
+/* Botón de "Ingresar": separado de los links de navegación a propósito,
+   para que se lea como una acción (iniciar sesión) y no como una
+   sección más del sitio. Mismo patrón responsive que el carrito
+   (ícono solo en mobile, ícono + texto desde tablet). */
+.auth-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-siena);
+  color: var(--color-white);
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.auth-btn:hover,
+.auth-btn.is-active {
+  background: var(--color-siena-dark);
+  color: var(--color-white);
+}
+
+.auth-btn__text {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  .auth-btn__text {
+    display: inline;
+  }
+}
+
 .cart-link {
   position: relative;
   display: flex;
@@ -1625,4 +1659,410 @@ button {
     align-items: flex-end;
     justify-content: space-between;
   }
+}
+
+/* ============================================
+   Panel de administración (CRUD de productos)
+   ============================================ */
+
+.admin-table-wrapper {
+  overflow-x: auto;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.92rem;
+  vertical-align: middle;
+}
+
+.admin-table thead th {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-soft);
+  background: var(--color-crema);
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(160, 82, 45, 0.04);
+}
+
+.admin-table__thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  display: block;
+  background: var(--color-alabastro);
+}
+
+.admin-table__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  line-height: 1.2;
+}
+
+.btn-sm--outline {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-ink);
+}
+
+.btn-sm--outline:hover {
+  border-color: var(--color-siena);
+  color: var(--color-siena);
+}
+
+.btn-sm--danger {
+  background: transparent;
+  border-color: rgba(176, 58, 46, 0.35);
+  color: #b03a2e;
+}
+
+.btn-sm--danger:hover {
+  background: #b03a2e;
+  border-color: #b03a2e;
+  color: var(--color-white);
+}
+
+.btn-sm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.stock-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(135, 169, 107, 0.15);
+  color: var(--color-verde);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.stock-pill--vacio {
+  background: rgba(176, 58, 46, 0.12);
+  color: #b03a2e;
+}
+
+/* Campos de formulario adicionales (select / checkbox) para ProductForm */
+.form-field select {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--color-ink);
+}
+
+.form-field select:focus {
+  outline: none;
+  border-color: var(--color-siena);
+}
+
+.checkbox-field label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 1.6rem;
+}
+
+.checkbox-field input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--color-siena);
+  cursor: pointer;
+}
+
+.image-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-alabastro);
+  margin-bottom: 1.25rem;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.trust-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.25rem;
+  margin-top: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .admin-table {
+    min-width: 560px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .checkbox-field label {
+    margin-top: 0.4rem;
+  }
+}
+
+/* ==========================================================================
+   (Login / Registro)
+   ========================================================================== */
+.auth-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-white);
+  padding: 2.5rem 2rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-border);
+}
+
+.auth-card__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-family: var(--font-display);
+  color: var(--color-siena-dark);
+  font-size: 1.05rem;
+}
+
+.auth-card__brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-siena);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.auth-card__title {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 1.8rem;
+}
+
+.auth-card__subtitle {
+  color: var(--color-ink-soft);
+  font-size: 0.92rem;
+  margin-bottom: 1.75rem;
+}
+
+.auth-card .form-field {
+  margin-bottom: 1.25rem;
+}
+
+.auth-card .form-field--checkbox,
+.auth-card .auth-row {
+  margin-top: 0.5rem;
+}
+
+/* ---- Toggle de contraseña ----*/
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-strong-password-auto-fill-button {
+  display: none !important;
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
+
+.field-control {
+  position: relative;
+  width: 100%;
+}
+
+.field-control input {
+  width: 100%;
+  padding-right: 3rem;
+  box-sizing: border-box;
+}
+
+.field-toggle {
+  position: absolute;
+  z-index: 2;
+  right: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  padding: 0;
+  color: var(--color-ink-soft);
+}
+
+.field-toggle:hover {
+  color: var(--color-siena);
+  background: rgba(160, 82, 45, 0.08);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 2rem 1.25rem;
+  }
+
+  .auth-card__title {
+    font-size: 1.5rem;
+  }
+
+  .auth-card .form-field input {
+    font-size: 1rem; /* evita el zoom automático en iOS */
+  }
+
+  .auth-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+.field-toggle:hover {
+  color: var(--color-siena);
+}
+
+.auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -0.25rem 0 1.25rem;
+  font-size: 0.82rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.auth-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-ink-soft);
+  font-size: 0.85rem;
+}
+
+.auth-checkbox input {
+  accent-color: var(--color-siena);
+  width: 15px;
+  height: 15px;
+}
+
+.auth-link {
+  color: var(--color-siena);
+  font-weight: 500;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+.auth-card__footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--color-ink-soft);
+}
+
+.form-field--checkbox {
+  margin-top: -0.25rem;
+}
+
+.form-alert {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-alert--error {
+  background: rgba(179, 64, 47, 0.1);
+  border: 1px solid #b3402f;
+  color: #b3402f;
+}
+
+.auth-link--button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }

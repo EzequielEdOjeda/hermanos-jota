@@ -23,7 +23,12 @@ async function request(path, options = {}) {
 
   if (!respuesta.ok) {
     const mensaje = data?.error || data?.mensaje || "Ocurrió un error inesperado";
-    throw new Error(mensaje);
+    const error = new Error(mensaje);
+    // Si el backend mandó errores de validación por campo (ver errorHandler
+    // para ValidationError de Mongoose), los adjuntamos para que los
+    // formularios de administración puedan resaltar el campo puntual.
+    error.campos = data?.errores || null;
+    throw error;
   }
 
   return data;
@@ -35,6 +40,36 @@ export function obtenerProductos() {
 
 export function obtenerProductoPorId(id) {
   return request(`/productos/${id}`);
+}
+
+/**
+ * Crea un producto nuevo. Responde con el documento creado (incluido su
+ * `_id` de MongoDB), útil para redirigir a su página de detalle.
+ */
+export function crearProducto(payload) {
+  return request("/productos", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Actualiza un producto existente por su id.
+ */
+export function actualizarProducto(id, payload) {
+  return request(`/productos/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Elimina un producto por su id.
+ */
+export function eliminarProducto(id) {
+  return request(`/productos/${id}`, {
+    method: "DELETE",
+  });
 }
 
 export function enviarMensajeContacto(payload) {

@@ -1,34 +1,53 @@
 import { useState } from "react";
+import { Link, NavLink } from "react-router-dom";
 
 /**
  * Barra de navegación principal.
- * Recibe la vista activa y el contador del carrito vía props desde App.js,
- * y notifica los cambios de navegación mediante callbacks (props también).
+ * El contador del carrito llega vía props desde App.jsx; la navegación
+ * entre páginas la maneja React Router (NavLink ya marca el link activo
+ * solo, sin necesidad de comparar manualmente la ruta actual).
  */
-function Navbar({ vista, onNavigate, cantidadCarrito, onAbrirCarrito }) {
+function Navbar({ cantidadCarrito, onAbrirCarrito }) {
   const [menuAbierto, setMenuAbierto] = useState(false);
 
-  function navegar(destino) {
-    onNavigate(destino);
+  function cerrarMenu() {
     setMenuAbierto(false);
+  }
+
+  function claseLink({ isActive }) {
+    return isActive ? "is-active" : "";
   }
 
   return (
     <header className="site-header">
       <div className="container site-header__bar">
-        <a
-          href="#inicio"
-          className="logo"
-          onClick={(e) => {
-            e.preventDefault();
-            navegar("inicio");
-          }}
-        >
+        <Link to="/" className="logo" onClick={cerrarMenu}>
           <img src="/img/logo.svg" alt="Logo Hermanos Jota" />
           Hermanos Jota
-        </a>
+        </Link>
 
         <div className="header-actions">
+          <NavLink
+            to="/login"
+            className={({ isActive }) => `auth-btn${isActive ? " is-active" : ""}`}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M20 21a8 8 0 0 0-16 0" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <span className="auth-btn__text">Ingresar</span>
+          </NavLink>
+
           <a
             href="#carrito"
             className="cart-link"
@@ -78,40 +97,41 @@ function Navbar({ vista, onNavigate, cantidadCarrito, onAbrirCarrito }) {
         >
           <ul className="site-nav__list">
             <li>
-              <a
-                href="#inicio"
-                className={`bi bi-house${vista === "inicio" ? " is-active" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  navegar("inicio");
-                }}
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) => `bi bi-house ${claseLink({ isActive })}`}
+                onClick={cerrarMenu}
               >
                 Inicio
-              </a>
+              </NavLink>
             </li>
             <li>
-              <a
-                href="#catalogo"
-                className={`bi bi-grid${vista === "catalogo" ? " is-active" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  navegar("catalogo");
-                }}
+              <NavLink
+                to="/productos"
+                className={({ isActive }) => `bi bi-grid ${claseLink({ isActive })}`}
+                onClick={cerrarMenu}
               >
                 Catálogo
-              </a>
+              </NavLink>
             </li>
             <li>
-              <a
-                href="#contacto"
-                className={`bi bi-envelope${vista === "contacto" ? " is-active" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  navegar("contacto");
-                }}
+              <NavLink
+                to="/contacto"
+                className={({ isActive }) => `bi bi-envelope ${claseLink({ isActive })}`}
+                onClick={cerrarMenu}
               >
                 Contacto
-              </a>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/admin"
+                className={({ isActive }) => `bi bi-gear ${claseLink({ isActive })}`}
+                onClick={cerrarMenu}
+              >
+                Admin
+              </NavLink>
             </li>
           </ul>
         </nav>

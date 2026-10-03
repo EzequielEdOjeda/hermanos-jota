@@ -40,9 +40,9 @@ function CartPanel({ abierto, carrito, total, onCerrar, onCambiarCantidad, onQui
             </div>
           ) : (
             carrito.map((item) => (
-              <div className="cart-item" key={item.id}>
+              <div className="cart-item" key={item._id}>
                 <div className="cart-item__image">
-                  <img src={item.imagen} alt={item.nombre} loading="lazy" />
+                  <img src={item.imagenUrl} alt={item.nombre} loading="lazy" />
                 </div>
                 <div className="cart-item__info">
                   <p className="cart-item__name">{item.nombre}</p>
@@ -51,7 +51,7 @@ function CartPanel({ abierto, carrito, total, onCerrar, onCambiarCantidad, onQui
                     <button
                       className="cart-qty-btn"
                       aria-label="Restar"
-                      onClick={() => onCambiarCantidad(item.id, -1)}
+                      onClick={() => onCambiarCantidad(item._id, -1)}
                     >
                       −
                     </button>
@@ -59,11 +59,11 @@ function CartPanel({ abierto, carrito, total, onCerrar, onCambiarCantidad, onQui
                     <button
                       className="cart-qty-btn"
                       aria-label="Sumar"
-                      onClick={() => onCambiarCantidad(item.id, 1)}
+                      onClick={() => onCambiarCantidad(item._id, 1)}
                     >
                       +
                     </button>
-                    <button className="cart-item__remove" onClick={() => onQuitar(item.id)}>
+                    <button className="cart-item__remove" onClick={() => onQuitar(item._id)}>
                       ✖️
                     </button>
                   </div>

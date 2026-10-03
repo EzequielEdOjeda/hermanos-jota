@@ -1,146 +1,156 @@
-import { useState } from "react";
-import { formatearPrecio } from "../utils/format";
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
 
-function ProductDetail({ producto, cargando, error, onAgregar, onNavigate }) {
+import { formatearPrecio } from "../utils/format";
+import { obtenerProductoPorId } from "../services/api";
+
+/**
+ * Página de detalle de un producto.
+ * Lee el id desde la URL con useParams y hace su propio GET
+ * /api/productos/:id (en vez de buscar en el listado global ya
+ * cargado), para que la página funcione también si se llega a ella
+ * directamente por URL (compartida, recargada, etc.) sin depender de
+ * que /productos ya se haya cargado antes.
+ */
+function ProductDetail({ onAgregar }) {
+  const { id } = useParams();
+
+  const [producto, setProducto] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
   const [cantidad, setCantidad] = useState(1);
 
-  function restar() {
-    setCantidad((valor) => Math.max(1, valor - 1));
-  }
+  useEffect(() => {
+    let activo = true;
 
-  function sumar() {
-    setCantidad((valor) => Math.min(10, valor + 1));
-  }
+    async function cargarProducto() {
+      setCargando(true);
+      setError(null);
+      setProducto(null);
+      setCantidad(1);
 
-  function agregarAlCarrito() {
-    onAgregar(producto, cantidad);
-    setCantidad(1);
-  }
+      try {
+        const data = await obtenerProductoPorId(id);
+        if (activo) setProducto(data);
+      } catch (err) {
+        if (activo) setError(err.message);
+      } finally {
+        if (activo) setCargando(false);
+      }
+    }
 
-  return (
-    <>
-      <div className="container">
-        <p className="breadcrumb">
-          <a
-            href="#inicio"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate("inicio");
-            }}
-          >
-            Inicio
-          </a>{" "}
-          /{" "}
-          <a
-            href="#catalogo"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate("catalogo");
-            }}
-          >
-            Catálogo
-          </a>{" "}
-          / <span>{producto ? producto.nombre : "Producto"}</span>
-        </p>
-      </div>
+    cargarProducto();
 
-      <section className="section" style={{ paddingTop: 0 }}>
+    return () => {
+      activo = false;
+    };
+  }, [id]);
+
+  if (cargando) {
+    return (
+      <section className="section">
         <div className="container">
-          {/* Estado de carga */}
-          {cargando && (
-            <div
-              className="skeleton-grid"
-              style={{ gridTemplateColumns: "1fr 1fr" }}
-              aria-hidden="true"
-            >
-              <div className="skeleton-card"></div>
-              <div className="skeleton-card" style={{ aspectRatio: "auto" }}></div>
+          <div className="skeleton-detail" aria-hidden="true">
+            <div className="skeleton-detail__media"></div>
+            <div className="skeleton-detail__info">
+              <div className="skeleton-line"></div>
+              <div className="skeleton-line"></div>
+              <div className="skeleton-line"></div>
+              <div className="skeleton-line"></div>
             </div>
-          )}
-
-          {/* Estado de error: id inválido o producto inexistente */}
-          {!cargando && (error || !producto) && (
-            <p className="state-message">
-              No encontramos ese producto.{" "}
-              <a
-                href="#catalogo"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onNavigate("catalogo");
-                }}
-              >
-                Volvé al catálogo
-              </a>
-              .
-            </p>
-          )}
-
-          {/* Contenido real */}
-          {!cargando && !error && producto && (
-            <article className="product-detail">
-              <div className="product-detail__media">
-                <img src={producto.imagen} alt={producto.nombre} />
-              </div>
-
-              <div className="product-detail__info">
-                <span className="product-detail__category">{producto.categoria}</span>
-                <h1 className="product-detail__title">{producto.nombre}</h1>
-                <p className="product-detail__price">{formatearPrecio(producto.precio)}</p>
-                <p className="product-detail__desc">{producto.descripcionLarga}</p>
-
-                <table className="spec-table">
-                  <tbody>
-                    <tr>
-                      <th scope="row">Medidas</th>
-                      <td>{producto.medidas}</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Materiales</th>
-                      <td>{producto.materiales}</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Acabado</th>
-                      <td>{producto.acabado}</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Detalle</th>
-                      <td>{producto.detalleExtra}</td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                <div className="quantity-row">
-                  <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>Cantidad</span>
-                  <div className="quantity-stepper">
-                    <button type="button" aria-label="Restar unidad" onClick={restar}>
-                      −
-                    </button>
-                    <input type="number" value={cantidad} min="1" max="10" readOnly />
-                    <button type="button" aria-label="Sumar unidad" onClick={sumar}>
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  className="btn btn-primary btn-full"
-                  type="button"
-                  onClick={agregarAlCarrito}
-                >
-                  Añadir al carrito
-                </button>
-
-                <div className="badge-row">
-                  <span className="badge-pill">🌳 Madera certificada FSC®</span>
-                  <span className="badge-pill">📦 Garantía extendida</span>
-                  <span className="badge-pill">♻️ Materiales sostenibles</span>
-                </div>
-              </div>
-            </article>
-          )}
+          </div>
         </div>
       </section>
-    </>
+    );
+  }
+
+  if (error || !producto) {
+    return (
+      <section className="section">
+        <div className="container">
+          <p className="state-message">
+            {error ? "No pudimos cargar este producto." : "No encontramos ese producto."}{" "}
+            <Link to="/productos">Volver al catálogo</Link>.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const stockMaximo = producto.stock > 0 ? producto.stock : 10;
+  const sinStock = producto.stock === 0;
+
+  return (
+    <section className="section">
+      <div className="container">
+        <nav className="breadcrumb" aria-label="Ruta de navegación">
+          <Link to="/">Inicio</Link> / <Link to="/productos">Catálogo</Link> / {producto.nombre}
+        </nav>
+
+        <div className="product-detail">
+          <div className="product-detail__media">
+            <img src={producto.imagenUrl} alt={producto.nombre} />
+          </div>
+
+          <div className="product-detail__info">
+            <span className="product-card__category">{producto.categoria}</span>
+            <h1>{producto.nombre}</h1>
+            <p className="product-detail__price">{formatearPrecio(producto.precio)}</p>
+            <p className="product-detail__description">{producto.descripcion}</p>
+
+            <table className="spec-table">
+              <tbody>
+                <tr>
+                  <th>Categoría</th>
+                  <td>{producto.categoria}</td>
+                </tr>
+                <tr>
+                  <th>Stock disponible</th>
+                  <td>{sinStock ? "Sin stock" : `${producto.stock} unidades`}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div className="qty-stepper">
+              <label htmlFor="cantidad">Cantidad</label>
+              <div className="qty-stepper__controls">
+                <button
+                  type="button"
+                  onClick={() => setCantidad((c) => Math.max(1, c - 1))}
+                  disabled={sinStock}
+                  aria-label="Restar"
+                >
+                  −
+                </button>
+                <input id="cantidad" type="text" value={cantidad} readOnly />
+                <button
+                  type="button"
+                  onClick={() => setCantidad((c) => Math.min(stockMaximo, c + 1))}
+                  disabled={sinStock}
+                  aria-label="Sumar"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <button
+              className="btn btn-primary btn-full"
+              onClick={() => onAgregar(producto, cantidad)}
+              disabled={sinStock}
+            >
+              {sinStock ? "Sin stock disponible" : "Añadir al carrito"}
+            </button>
+
+            <div className="trust-badges">
+              <span>🌳 Madera certificada FSC®</span>
+              <span>📦 Garantía extendida</span>
+              <span>♻️ Materiales sostenibles</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 

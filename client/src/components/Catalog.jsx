@@ -2,7 +2,7 @@ import { useState } from "react";
 import ProductList from "./ProductList";
 import { CATEGORIAS } from "../utils/format";
 
-function Catalog({ productos, cargando, error, onVerDetalle, onAgregar }) {
+function Catalog({ productos, cargando, error, onAgregar }) {
   const [categoriaActiva, setCategoriaActiva] = useState("todas");
   const [busqueda, setBusqueda] = useState("");
 
@@ -17,7 +17,7 @@ function Catalog({ productos, cargando, error, onVerDetalle, onAgregar }) {
     resultado = resultado.filter(
       (p) =>
         p.nombre.toLowerCase().includes(termino) ||
-        p.descripcionCorta.toLowerCase().includes(termino) ||
+        p.descripcion.toLowerCase().includes(termino) ||
         p.categoria.toLowerCase().includes(termino),
     );
   }
@@ -29,8 +29,8 @@ function Catalog({ productos, cargando, error, onVerDetalle, onAgregar }) {
           <p className="eyebrow">Catálogo completo</p>
           <h1 className="section-title">Nuestros muebles</h1>
           <p className="section-intro" style={{ color: "var(--color-ink-soft)" }}>
-            Once piezas, cada una con su propia historia de artesanía y materiales nobles. Filtrá
-            por ambiente o buscá por nombre.
+            {productos.length} piezas, cada una con su propia historia de artesanía y materiales
+            nobles. Filtrá por ambiente o buscá por nombre.
           </p>
 
           <div className="catalog-toolbar">
@@ -89,7 +89,7 @@ function Catalog({ productos, cargando, error, onVerDetalle, onAgregar }) {
           )}
 
           {!cargando && !error && resultado.length > 0 && (
-            <ProductList productos={resultado} onVerDetalle={onVerDetalle} onAgregar={onAgregar} />
+            <ProductList productos={resultado} onAgregar={onAgregar} />
           )}
         </div>
       </section>

@@ -1,40 +1,34 @@
+import { Link } from "react-router-dom";
 import { formatearPrecio } from "../utils/format";
 
 /**
- * Tarjeta individual de producto. Recibe el producto y dos callbacks
- * (ver detalle / agregar al carrito) vía props; no maneja estado propio.
+ * Tarjeta individual de producto. La navegación al detalle la resuelve
+ * React Router (Link a /productos/:id); solo recibe por props el
+ * producto y el callback para agregarlo al carrito.
  */
-function ProductCard({ producto, onVerDetalle, onAgregar }) {
+function ProductCard({ producto, onAgregar }) {
+  const sinStock = producto.stock === 0;
+
   return (
     <article className="product-card">
-      <a
-        href={`#producto-${producto.id}`}
-        className="product-card__media"
-        onClick={(e) => {
-          e.preventDefault();
-          onVerDetalle(producto.id);
-        }}
-      >
-        <img src={producto.imagen} alt={producto.nombre} loading="lazy" />
-      </a>
+      <Link to={`/productos/${producto._id}`} className="product-card__media">
+        <img src={producto.imagenUrl} alt={producto.nombre} loading="lazy" />
+      </Link>
       <div className="product-card__body">
         <span className="product-card__category">{producto.categoria}</span>
         <h3 className="product-card__name">
-          <a
-            href={`#producto-${producto.id}`}
-            onClick={(e) => {
-              e.preventDefault();
-              onVerDetalle(producto.id);
-            }}
-          >
-            {producto.nombre}
-          </a>
+          <Link to={`/productos/${producto._id}`}>{producto.nombre}</Link>
         </h3>
-        <p className="product-card__desc">{producto.descripcionCorta}</p>
+        <p className="product-card__desc">{producto.descripcion}</p>
         <div className="product-card__footer">
           <span className="product-card__price">{formatearPrecio(producto.precio)}</span>
-          <button className="card-btn-add" onClick={() => onAgregar(producto, 1)}>
-            Añadir
+          <button
+            className="card-btn-add"
+            onClick={() => onAgregar(producto, 1)}
+            disabled={sinStock}
+            title={sinStock ? "Sin stock disponible" : "Añadir al carrito"}
+          >
+            {sinStock ? "Sin stock" : "Añadir"}
           </button>
         </div>
       </div>

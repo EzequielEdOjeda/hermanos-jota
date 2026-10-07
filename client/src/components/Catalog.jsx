@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import ProductList from "./ProductList";
+import { useAuth } from "../context/AuthContext";
 import { CATEGORIAS } from "../utils/format";
 
-function Catalog({ productos, cargando, error, onVerDetalle, onAgregar }) {
+function Catalog({ productos, cargando, error, onAgregar, onEliminar }) {
+  const { esAdmin } = useAuth();
   const [categoriaActiva, setCategoriaActiva] = useState("todas");
   const [busqueda, setBusqueda] = useState("");
 
@@ -17,7 +20,7 @@ function Catalog({ productos, cargando, error, onVerDetalle, onAgregar }) {
     resultado = resultado.filter(
       (p) =>
         p.nombre.toLowerCase().includes(termino) ||
-        p.descripcionCorta.toLowerCase().includes(termino) ||
+        (p.descripcionCorta ?? "").toLowerCase().includes(termino) ||
         p.categoria.toLowerCase().includes(termino),
     );
   }
@@ -26,11 +29,24 @@ function Catalog({ productos, cargando, error, onVerDetalle, onAgregar }) {
     <>
       <section className="section" style={{ paddingBottom: "1rem" }}>
         <div className="container">
-          <p className="eyebrow">Catálogo completo</p>
-          <h1 className="section-title">Nuestros muebles</h1>
+          <div className="catalog-header">
+            <div>
+              <p className="eyebrow">Catálogo completo</p>
+              <h1 className="section-title">Nuestros muebles</h1>
+            </div>
+
+            {esAdmin && (
+              <Link to="/admin/crear-producto" className="btn btn-primary btn-sm">
+                <i className="bi bi-plus-lg" aria-hidden="true"></i>
+                Nuevo producto
+              </Link>
+            )}
+          </div>
           <p className="section-intro" style={{ color: "var(--color-ink-soft)" }}>
-            Once piezas, cada una con su propia historia de artesanía y materiales nobles. Filtrá
-            por ambiente o buscá por nombre.
+            {productos.length > 0
+              ? `${productos.length} piezas, cada una con su propia historia`
+              : "Cada pieza con su propia historia"}{" "}
+            de artesanía y materiales nobles. Filtrá por ambiente o buscá por nombre.
           </p>
 
           <div className="catalog-toolbar">
@@ -89,7 +105,7 @@ function Catalog({ productos, cargando, error, onVerDetalle, onAgregar }) {
           )}
 
           {!cargando && !error && resultado.length > 0 && (
-            <ProductList productos={resultado} onVerDetalle={onVerDetalle} onAgregar={onAgregar} />
+            <ProductList productos={resultado} onAgregar={onAgregar} onEliminar={onEliminar} />
           )}
         </div>
       </section>

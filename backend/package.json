@@ -6,12 +6,19 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "seed": "node src/scripts/seed.js",
+    "seed:users": "node src/scripts/seedUsuarios.js"
+  },
+  "engines": {
+    "node": ">=20.19.0"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
-  },
-  "devDependencies": {}
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.10.4"
+  }
 }

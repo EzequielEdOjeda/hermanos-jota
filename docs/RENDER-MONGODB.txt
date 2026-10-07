@@ -1,0 +1,326 @@
+==============================================================================
+ HERMANOS JOTA - CÓMO CONECTAR RENDER CON MONGODB (ATLAS)
+==============================================================================
+
+Esta guía te lleva de cero a tener el backend desplegado en Render usando una
+base de datos MongoDB en la nube (MongoDB Atlas, plan gratuito).
+
+Cómo queda armado todo:
+
+    [ Navegador ]  -->  [ Vercel: frontend React ]
+                               |
+                               |  fetch  (VITE_API_URL)
+                               v
+                        [ Render: API Express ]  -->  [ MongoDB Atlas ]
+                                                       (productos, usuarios)
+
+Lo único que "une" Render con MongoDB es UNA variable de entorno en Render
+llamada MONGODB_URI (la cadena de conexión de Atlas). El resto es configurar
+Atlas para que acepte esa conexión.
+
+Nota: los nombres de los botones de Atlas y Render pueden cambiar un poco con
+el tiempo. Si algo no coincide exactamente, buscá el equivalente en el menú.
+
+
+------------------------------------------------------------------------------
+ ANTES DE EMPEZAR
+------------------------------------------------------------------------------
+  - Cuenta en MongoDB Atlas  (https://www.mongodb.com/atlas)
+  - Cuenta en Render         (https://render.com) con el backend ya creado
+    como "Web Service" desde tu repo de GitHub.
+  - El proyecto actualizado en tu máquina, con "npm install" hecho en
+    /backend (para poder correr los seeds desde tu computadora).
+  - Node.js 20.19 o superior.
+
+
+==============================================================================
+ PARTE 1 - CREAR LA BASE EN MONGODB ATLAS
+==============================================================================
+
+1.1  Crear el cluster gratuito
+     - Entrá a Atlas y creá un proyecto (por ejemplo "hermanos-jota").
+     - "Create" / "Build a Database" -> elegí el plan FREE (M0).
+     - Proveedor: AWS. Región: elegí una cercana a la región de tu servicio
+       de Render (en Render: tu servicio -> Settings -> Region). Si Render
+       está en "Oregon (US West)", elegí Oregon (us-west-2); si está en
+       "Ohio" o "Virginia", elegí us-east. Cuanto más cerca, menos latencia.
+     - Dale un nombre (por ejemplo "Cluster0") y creá el cluster.
+
+1.2  Crear el usuario de la base de datos
+     (Es un usuario SOLO para que tu app se conecte; no es tu usuario de Atlas.)
+     - Menú lateral: Security -> Database Access -> "Add New Database User".
+     - Authentication: Password.
+     - Usuario: por ejemplo  jota_app
+     - Contraseña: usá letras y números, SIN símbolos raros
+       (evitá  @  :  /  ?  #  %  ). Podés usar "Autogenerate Secure Password"
+       y copiarla.
+     - Privilegios: "Read and write to any database".
+     - "Add User".
+
+1.3  Permitir conexiones desde Render
+     - Menú lateral: Security -> Network Access -> "Add IP Address".
+     - Elegí "ALLOW ACCESS FROM ANYWHERE"  (queda  0.0.0.0/0)  y confirmá.
+     Por qué: el plan gratuito de Render no tiene una IP fija de salida, así
+     que no se puede habilitar "solo la IP de Render". La seguridad queda en
+     la contraseña del usuario de base de datos (por eso que sea larga).
+     Si más adelante pasás a un plan pago de Render, podés usar sus IPs de
+     salida (están en el botón "Connect" del servicio) y borrar el 0.0.0.0/0.
+
+1.4  Copiar la cadena de conexión
+     - Database -> tu cluster -> "Connect" -> "Drivers" -> Node.js.
+     - Copiá la cadena. Se ve así:
+
+       mongodb+srv://jota_app:<password>@cluster0.abcde.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+
+     - Hay que hacer DOS cambios:
+         a) Reemplazar  <password>  por la contraseña real (sin los < >).
+         b) Agregar el nombre de la base DESPUÉS de ".mongodb.net/" y ANTES
+            del "?". Usá  hermanosjota :
+
+       mongodb+srv://jota_app:MiClave123@cluster0.abcde.mongodb.net/hermanosjota?retryWrites=true&w=majority&appName=Cluster0
+
+     Esa línea completa es tu  MONGODB_URI.
+
+     Si tu contraseña tiene símbolos, hay que "codificarlos" en la URL:
+         @ -> %40    : -> %3A    / -> %2F    ? -> %3F    # -> %23    % -> %25
+     (Lo más simple es crear una contraseña sin símbolos.)
+
+
+==============================================================================
+ PARTE 2 - PROBAR LA CONEXIÓN EN TU COMPUTADORA
+==============================================================================
+
+Conviene probar primero localmente: si funciona acá, en Render va a andar.
+
+2.1  Crear el archivo  backend/.env  (copiá backend/.env.example) y completar:
+
+       PORT=4000
+       MONGODB_URI=mongodb+srv://jota_app:MiClave123@cluster0.abcde.mongodb.net/hermanosjota?retryWrites=true&w=majority&appName=Cluster0
+       JWT_SECRET=<un-texto-largo-y-aleatorio>
+       JWT_EXPIRES=7d
+
+     Sin comillas y sin espacios alrededor del "=".
+     El archivo .env NO se sube a GitHub (ya está en .gitignore). Nunca lo
+     subas: tiene tu contraseña.
+
+2.2  Generar un JWT_SECRET seguro (pegá el resultado en el .env):
+
+       node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+
+2.3  Levantar el backend:
+
+       cd backend
+       npm run dev
+
+     Tiene que aparecer:
+
+       🍃 MongoDB conectado → cluster0-shard-00-00.abcde.mongodb.net/hermanosjota
+       🚀 Servidor de Hermanos Jota corriendo en http://localhost:4000
+
+     Si aparece "No se pudo conectar a MongoDB", mirá la sección
+     SOLUCIÓN DE PROBLEMAS al final.
+
+
+==============================================================================
+ PARTE 3 - CARGAR LOS DATOS (SEEDS) EN ATLAS
+==============================================================================
+
+La base de Atlas empieza VACÍA. Hay que cargarle los productos y los usuarios
+de prueba. Con el mismo .env de la parte 2 (apuntando a Atlas):
+
+       cd backend
+       npm run seed:users      # crea admin@hermanosjota.com y cliente@...
+       npm run seed            # carga los 11 productos
+
+Los dos se pueden correr varias veces sin duplicar nada.
+
+  *** IMPORTANTE - SEGURIDAD DEL ADMIN ***
+  Las credenciales de prueba (admin123) son públicas: están en el README.
+  Si tu sitio queda en internet, cualquiera podría entrar como admin.
+  Para crear un admin propio, agregá estas líneas al backend/.env ANTES de
+  correr "npm run seed:users":
+
+       SEED_ADMIN_EMAIL=tu-correo@ejemplo.com
+       SEED_ADMIN_PASSWORD=una-contraseña-larga-y-segura
+
+  (Si ya sembraste con admin123: en Atlas borrá el usuario admin de la
+  colección "usuarios" y volvé a correr "npm run seed:users".)
+
+Verificar en Atlas:  Database -> "Browse Collections" -> base "hermanosjota":
+       productos   -> 11 documentos
+       usuarios    -> 2 documentos  (las contraseñas se ven como $2a$10$...,
+                                      están hasheadas: es lo correcto)
+
+Si querés recargar el catálogo desde cero (borra TODOS los productos):
+
+       npm run seed -- --reset
+
+
+==============================================================================
+ PARTE 4 - CONFIGURAR RENDER
+==============================================================================
+
+4.1  Abrí tu servicio en el Dashboard de Render y revisá  Settings:
+       Root Directory : backend
+       Build Command  : npm install
+       Start Command  : npm start
+
+4.2  Ir a la pestaña  Environment  -> "Add Environment Variable". Agregá:
+
+       MONGODB_URI   = (la cadena completa de la parte 1.4)
+       JWT_SECRET    = (un secreto largo y aleatorio; ver 2.2)
+       JWT_EXPIRES   = 7d
+
+     Opcional, si el deploy se queja de la versión de Node:
+       NODE_VERSION  = 22
+
+     Consejos:
+       - Pegá los valores SIN comillas.
+       - Usá un JWT_SECRET distinto al de tu computadora si querés; no pasa
+         nada si es el mismo, pero NUNCA lo subas a GitHub.
+       - Si más tarde CAMBIÁS el JWT_SECRET, todas las sesiones abiertas dejan
+         de valer (la gente tendrá que volver a ingresar). Es normal.
+
+4.3  Guardá los cambios. Render vuelve a desplegar solo. Si no lo hace:
+       Manual Deploy -> "Deploy latest commit".
+
+4.4  Abrí la pestaña  Logs  y esperá hasta ver:
+
+       🍃 MongoDB conectado → ...
+       🚀 Servidor de Hermanos Jota corriendo en ...
+
+     Si en cambio ves "Faltan variables de entorno: ...", faltó cargar alguna
+     variable del paso 4.2.
+
+
+==============================================================================
+ PARTE 5 - VERIFICAR EL BACKEND DESPLEGADO
+==============================================================================
+
+Reemplazá  <TU-SERVICIO>  por el nombre de tu servicio de Render.
+(La primera petición puede tardar 30-60 segundos si el servicio estaba
+"dormido": es normal en el plan gratuito.)
+
+  a) Salud:
+       curl https://<TU-SERVICIO>.onrender.com/api
+
+  b) Productos (tiene que devolver { "ok": true, "data": [ ...11 productos ] }):
+       curl https://<TU-SERVICIO>.onrender.com/api/productos
+
+  c) Login del admin (devuelve "usuario" y "token"):
+       curl -X POST https://<TU-SERVICIO>.onrender.com/api/auth/login \
+         -H "Content-Type: application/json" \
+         -d '{"email":"admin@hermanosjota.com","password":"admin123"}'
+
+  d) Ruta protegida SIN token (tiene que dar 401):
+       curl -i -X POST https://<TU-SERVICIO>.onrender.com/api/productos \
+         -H "Content-Type: application/json" -d '{"nombre":"x","precio":1}'
+
+  e) Con el token de un CLIENTE tiene que dar 403, y con el de un ADMIN, 201.
+     (Copiá el valor de "token" del login y mandalo así:)
+       -H "Authorization: Bearer <EL-TOKEN>"
+
+En Windows (PowerShell) "curl" tiene otra sintaxis: usá Postman, Insomnia o
+la extensión "Thunder Client" de VS Code para estas pruebas.
+
+
+==============================================================================
+ PARTE 6 - FRONTEND (VERCEL)
+==============================================================================
+
+  - Vercel -> tu proyecto -> Settings -> Environment Variables:
+       VITE_API_URL = https://<TU-SERVICIO>.onrender.com/api
+    (con https y terminando en /api).
+  - Redeploy del frontend (las variables VITE_ se leen al construir).
+  - client/vercel.json ya redirige todas las rutas a index.html, así que
+    /login, /register y /admin/... funcionan al recargar o con links directos.
+  - Desplegá backend y frontend JUNTOS: el formato de /api/productos cambió
+    ({ ok, data }) y el frontend nuevo ya lo entiende.
+
+
+==============================================================================
+ CHECKLIST MANUAL (marcá a medida que avanzás)
+==============================================================================
+
+  [ ] Atlas: cluster M0 creado
+  [ ] Atlas: usuario de base de datos creado (anotada la contraseña)
+  [ ] Atlas: Network Access con 0.0.0.0/0
+  [ ] MONGODB_URI armada (contraseña real + nombre de base /hermanosjota)
+  [ ] backend/.env completo y "npm run dev" muestra "MongoDB conectado"
+  [ ] (Recomendado) SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD definidos
+  [ ] "npm run seed:users" ejecutado contra Atlas
+  [ ] "npm run seed" ejecutado contra Atlas (11 productos)
+  [ ] Render: MONGODB_URI, JWT_SECRET y JWT_EXPIRES cargadas
+  [ ] Render: redeploy hecho y los Logs muestran "MongoDB conectado"
+  [ ] curl /api/productos devuelve { ok: true, data: [...] }
+  [ ] Login admin OK; POST /api/productos sin token = 401; con cliente = 403
+  [ ] Vercel: VITE_API_URL apunta a Render y frontend redeployado
+  [ ] En el sitio: login admin, crear/editar/eliminar un producto
+  [ ] En el sitio: login cliente, sin botones de admin; /admin/... -> "Sin permisos"
+  [ ] Recargar la página con sesión iniciada y seguir logueado
+
+
+==============================================================================
+ SOLUCIÓN DE PROBLEMAS
+==============================================================================
+
+"MongooseServerSelectionError ... IP that isn't whitelisted" / "timed out"
+   -> Atlas bloquea la conexión. Revisá Network Access (parte 1.3): tiene que
+      estar 0.0.0.0/0 y en estado "Active". Esperá 1-2 minutos tras cambiarlo.
+
+"bad auth : Authentication failed"
+   -> Usuario o contraseña incorrectos en MONGODB_URI.
+      - Es el usuario de "Database Access", no tu usuario de Atlas.
+      - Si la contraseña tiene símbolos, codificalos (parte 1.4) o creá otra.
+      - Verificá que no quedaron los símbolos < > alrededor del password.
+
+"querySrv ECONNREFUSED" / "querySrv ENOTFOUND" (suele pasar en tu PC)
+   -> Tu red, antivirus o proveedor bloquea la consulta DNS de "mongodb+srv".
+      Opciones: probar con otra red (por ejemplo, datos del celular); cambiar
+      el DNS de tu PC a 8.8.8.8 / 1.1.1.1; o usar la cadena "estándar" sin
+      "+srv" que Atlas ofrece al elegir un driver/versión anterior en Connect.
+      En Render esto no suele ocurrir.
+
+Render: "Faltan variables de entorno: MONGODB_URI, JWT_SECRET"
+   -> Cargalas en Environment (parte 4.2) y esperá el redeploy.
+
+Render: error de versión de Node (EBADENGINE) en el build
+   -> Agregá la variable NODE_VERSION = 22 y redeployá.
+
+El sitio carga pero no aparecen productos
+   -> Casi siempre: no corriste "npm run seed" contra Atlas (la base local y
+      la de Atlas son distintas), o VITE_API_URL en Vercel apunta mal.
+      Probá abrir  https://<TU-SERVICIO>.onrender.com/api/productos  directo.
+
+Tarda mucho la primera vez / el sitio "se queda cargando"
+   -> El plan gratuito de Render duerme el servicio tras ~15 min sin uso y
+      tarda 30-60 s en despertar. Es normal; la segunda carga es rápida.
+
+"Tu sesión venció" o te desloguea después de tocar variables en Render
+   -> Cambiar JWT_SECRET invalida los tokens anteriores. Ingresá de nuevo.
+
+Error de CORS en el navegador
+   -> El backend ya habilita CORS (incluye el header Authorization). Casi
+      siempre es que VITE_API_URL está mal (falta https:// o /api) o que el
+      backend está caído/dormido. Revisá los Logs de Render.
+
+"E11000 duplicate key"
+   -> Estás intentando crear algo que ya existe (correo o producto repetido).
+      Para recargar los productos desde cero: "npm run seed -- --reset".
+
+No puedo entrar como admin en producción
+   -> ¿Corriste "npm run seed:users" contra Atlas (no contra Mongo local)?
+      Si usaste SEED_ADMIN_EMAIL/PASSWORD, entrá con ESOS datos.
+      (Si el admin ya existía, el seed no lo modifica: borralo en Atlas y
+      volvé a correr el seed.)
+
+
+==============================================================================
+ BUENAS PRÁCTICAS DE SEGURIDAD
+==============================================================================
+  - Nunca subas backend/.env a GitHub ni compartas MONGODB_URI o JWT_SECRET.
+  - Si por error se publicó una contraseña: cambiala en Atlas (Database
+    Access -> Edit) y actualizá MONGODB_URI en Render y en tu .env.
+  - Cambiá o reemplazá las credenciales de prueba antes de mostrar el sitio.
+  - El token de sesión dura 7 días (JWT_EXPIRES). Podés acortarlo.
+==============================================================================

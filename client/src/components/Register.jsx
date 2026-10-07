@@ -1,236 +1,217 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import AuthCard from "./AuthCard";
+import AuthField from "./AuthField";
+import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import { primerNombre } from "../utils/format";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function Register({ onNavigate }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [acceptsTerms, setAcceptsTerms] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [formError, setFormError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+function validar({ nombre, email, password, confirmar }) {
+  const errores = {};
 
-  function validate() {
-    const next = {};
-    if (!name.trim()) {
-      next.name = "Ingresá tu nombre.";
-    }
-    if (!email.trim()) {
-      next.email = "Ingresá tu correo electrónico.";
-    } else if (!EMAIL_RE.test(email)) {
-      next.email = "Ese correo no parece válido.";
-    }
-    if (!password) {
-      next.password = "Creá una contraseña.";
-    } else if (password.length < 8) {
-      next.password = "Usá al menos 8 caracteres.";
-    }
-    if (confirmPassword !== password) {
-      next.confirmPassword = "Las contraseñas no coinciden.";
-    }
-    if (!acceptsTerms) {
-      next.acceptsTerms = "Tenés que aceptar los términos para continuar.";
-    }
-    return next;
+  if (nombre.trim().length < 2) {
+    errores.nombre = "Ingresá tu nombre (al menos 2 caracteres)";
+  }
+
+  if (!email.trim()) {
+    errores.email = "Ingresá tu correo electrónico";
+  } else if (!REGEX_EMAIL.test(email.trim())) {
+    errores.email = "El correo electrónico no es válido";
+  }
+
+  if (!password) {
+    errores.password = "Elegí una contraseña";
+  } else if (password.length < 6) {
+    errores.password = "La contraseña debe tener al menos 6 caracteres";
+  }
+
+  if (!confirmar) {
+    errores.confirmar = "Repetí la contraseña";
+  } else if (confirmar !== password) {
+    errores.confirmar = "Las contraseñas no coinciden";
+  }
+
+  return errores;
+}
+
+/**
+ * Pantalla de registro (ruta /register).
+ * Crea la cuenta con AuthContext.register() (POST /api/auth/register). El rol
+ * lo decide siempre el backend ("cliente"): este formulario no lo envía.
+ */
+function Register() {
+  const { usuario, register } = useAuth();
+  const { mostrarToast } = useToast();
+  const navigate = useNavigate();
+
+  const [valores, setValores] = useState({ nombre: "", email: "", password: "", confirmar: "" });
+  const [errores, setErrores] = useState({});
+  const [errorServidor, setErrorServidor] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [yaTeniaSesion] = useState(Boolean(usuario));
+
+  const refs = {
+    nombre: useRef(null),
+    email: useRef(null),
+    password: useRef(null),
+    confirmar: useRef(null),
+  };
+
+  if (yaTeniaSesion) {
+    return <Navigate to="/" replace />;
+  }
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    const nuevosValores = { ...valores, [name]: value };
+
+    setValores(nuevosValores);
+
+    // Se revalidan los campos que ya estaban en error. Al cambiar la contraseña
+    // también se revisa "confirmar", porque su error depende de ella.
+    const afectados = name === "password" ? ["password", "confirmar"] : [name];
+    const revalidados = validar(nuevosValores);
+    setErrores((prev) => {
+      const siguiente = { ...prev };
+      for (const campo of afectados) {
+        if (prev[campo]) siguiente[campo] = revalidados[campo];
+      }
+      return siguiente;
+    });
+    if (errorServidor) setErrorServidor("");
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setFormError("");
+    if (enviando) return;
 
-    const validationErrors = validate();
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
+    setErrorServidor("");
+    const nuevosErrores = validar(valores);
+    setErrores(nuevosErrores);
 
-    setIsSubmitting(true);
+    const primerInvalido = ["nombre", "email", "password", "confirmar"].find(
+      (campo) => nuevosErrores[campo],
+    );
+    if (primerInvalido) return refs[primerInvalido].current?.focus();
+
+    setEnviando(true);
     try {
-      // TODO: reemplazar por la llamada real al backend de registro.
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      console.log({ name, email, password });
-      onNavigate?.("login");
-    } catch (err) {
-      setFormError("No pudimos crear tu cuenta. Probá de nuevo en un momento.");
-    } finally {
-      setIsSubmitting(false);
+      const sesion = await register({
+        nombre: valores.nombre.trim(),
+        email: valores.email.trim(),
+        password: valores.password,
+      });
+      mostrarToast(`¡Cuenta creada! Te damos la bienvenida, ${primerNombre(sesion.nombre)}`);
+      navigate("/", { replace: true });
+    } catch (error) {
+      if (error.status === 409) {
+        // Correo ya registrado: el error se marca en el campo que lo causó.
+        setErrores({ email: "Ya existe una cuenta con este correo electrónico" });
+        refs.email.current?.focus();
+      } else {
+        setErrorServidor(error.message);
+      }
+      setEnviando(false);
     }
   }
 
   return (
-    <section className="section">
-      <div className="container auth-wrap">
-        <div className="auth-card">
-          <div className="auth-card__brand">
-            <span className="auth-card__brand-mark">H</span>
-            Hermanos Jota
+    <AuthCard
+      titulo="Creá tu cuenta"
+      subtitulo="Registrate en Hermanos Jota en menos de un minuto."
+      pie={
+        <>
+          ¿Ya tenés cuenta?{" "}
+          <Link to="/login" className="login-link">
+            Ingresá
+          </Link>
+        </>
+      }
+    >
+      <form className="login-form" onSubmit={handleSubmit} noValidate>
+        <AuthField
+          id="register-nombre"
+          name="nombre"
+          label="Nombre"
+          autoComplete="name"
+          value={valores.nombre}
+          onChange={handleChange}
+          error={errores.nombre}
+          inputRef={refs.nombre}
+        />
+
+        <AuthField
+          id="register-email"
+          name="email"
+          type="email"
+          label="Correo electrónico"
+          autoComplete="email"
+          inputMode="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          value={valores.email}
+          onChange={handleChange}
+          error={errores.email}
+          inputRef={refs.email}
+        />
+
+        <AuthField
+          id="register-password"
+          name="password"
+          type="password"
+          label="Contraseña (mínimo 6 caracteres)"
+          autoComplete="new-password"
+          value={valores.password}
+          onChange={handleChange}
+          error={errores.password}
+          inputRef={refs.password}
+        />
+
+        <AuthField
+          id="register-confirmar"
+          name="confirmar"
+          type="password"
+          label="Repetir contraseña"
+          autoComplete="new-password"
+          value={valores.confirmar}
+          onChange={handleChange}
+          error={errores.confirmar}
+          inputRef={refs.confirmar}
+        />
+
+        {errorServidor && (
+          <div className="form-alert form-alert--error" role="alert">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4" />
+              <path d="M12 16h.01" />
+            </svg>
+            <span>{errorServidor}</span>
           </div>
+        )}
 
-          <p className="eyebrow">Sumate a la casa</p>
-          <h1 className="section-title auth-card__title">Creá tu cuenta</h1>
-          <p className="auth-card__subtitle">
-            Guardá tus piezas favoritas y seguí el estado de tus pedidos
-            desde un solo lugar.
-          </p>
-
-          {formError && (
-            <div className="form-alert form-alert--error">{formError}</div>
-          )}
-
-          <form onSubmit={handleSubmit} noValidate>
-            <div className={`form-field ${errors.name ? "has-error" : ""}`}>
-              <label htmlFor="name">Nombre completo</label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Tu nombre"
-                autoComplete="name"
-              />
-              <span className="field-error">{errors.name}</span>
-            </div>
-
-            <div className={`form-field ${errors.email ? "has-error" : ""}`}>
-              <label htmlFor="reg-email">Correo electrónico</label>
-              <input
-                id="reg-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@email.com"
-                autoComplete="email"
-              />
-              <span className="field-error">{errors.email}</span>
-            </div>
-
-            <div
-              className={`form-field ${errors.password ? "has-error" : ""}`}
-            >
-              <label htmlFor="reg-password">Contraseña</label>
-              <div className="field-control">
-                <input
-                  id="reg-password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mínimo 8 caracteres"
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  className="field-toggle"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={
-                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
-                  }
-                >
-                  {showPassword ? (
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M4 4l16 16" />
-                      <path d="M10.6 10.7a2.5 2.5 0 0 0 3.5 3.5" />
-                      <path d="M7.4 7.5C4.9 9 3 12 3 12s3.5 6.5 9 6.5c1.6 0 3-.4 4.2-1.1M12 5.5c5.5 0 9 6.5 9 6.5a14.6 14.6 0 0 1-2.1 2.9" />
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 12s3.5-6.5 9-6.5S21 12 21 12s-3.5 6.5-9 6.5S3 12 3 12Z" />
-                      <circle cx="12" cy="12" r="2.5" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-              <span className="field-error">{errors.password}</span>
-            </div>
-
-            <div
-                className={`form-field ${
-                    errors.confirmPassword ? "has-error" : ""
-                }`}
-                >
-                <label htmlFor="confirm-password">
-                    Confirmar contraseña
-                </label>
-
-                <div className="field-control">
-                    <input
-                    id="confirm-password"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repetí tu contraseña"
-                    autoComplete="new-password"
-                    />
-
-                    <button
-                    type="button"
-                    className="field-toggle"
-                    onClick={() => setShowConfirmPassword((v) => !v)}
-                    aria-label={
-                        showConfirmPassword
-                        ? "Ocultar contraseña"
-                        : "Mostrar contraseña"
-                    }
-                    >
-                    {showConfirmPassword ? (
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 4l16 16" />
-                        <path d="M10.6 10.7a2.5 2.5 0 0 0 3.5 3.5" />
-                        <path d="M7.4 7.5C4.9 9 3 12 3 12s3.5 6.5 9 6.5c1.6 0 3-.4 4.2-1.1M12 5.5c5.5 0 9 6.5 9 6.5a14.6 14.6 0 0 1-2.1 2.9" />
-                        </svg>
-                    ) : (
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 12s3.5-6.5 9-6.5S21 12 21 12s-3.5 6.5-9 6.5S3 12 3 12Z" />
-                        <circle cx="12" cy="12" r="2.5" />
-                        </svg>
-                    )}
-                    </button>
-                </div>
-
-                <span className="field-error">
-                    {errors.confirmPassword}
-                </span>
-            </div>
-
-            <div
-              className={`form-field form-field--checkbox ${
-                errors.acceptsTerms ? "has-error" : ""
-              }`}
-            >
-              <label className="auth-checkbox">
-                <input
-                  type="checkbox"
-                  checked={acceptsTerms}
-                  onChange={(e) => setAcceptsTerms(e.target.checked)}
-                />
-                Acepto los términos y condiciones
-              </label>
-              <span className="field-error">{errors.acceptsTerms}</span>
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary btn-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
-            </button>
-          </form>
-
-          <p className="auth-card__footer">
-            ¿Ya tenés una cuenta?{" "}
-            <button
-              type="button"
-              className="auth-link auth-link--button"
-              onClick={() => onNavigate?.("login")}
-            >
-              Iniciá sesión
-            </button>
-          </p>
-        </div>
-      </div>
-    </section>
+        <button
+          type="submit"
+          className={`btn btn-primary login-btn${enviando ? " is-loading" : ""}`}
+          disabled={enviando}
+          aria-busy={enviando}
+        >
+          {enviando ? "Creando cuenta…" : "Crear cuenta"}
+        </button>
+      </form>
+    </AuthCard>
   );
 }
 

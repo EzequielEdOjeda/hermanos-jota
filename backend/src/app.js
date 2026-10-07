@@ -5,6 +5,7 @@ import { logger } from "./middlewares/logger.js";
 import { notFound } from "./middlewares/notFound.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
+import authRouter from "./routes/auth.routes.js";
 import productosRouter from "./routes/productos.routes.js";
 import contactoRouter from "./routes/contacto.routes.js";
 
@@ -21,6 +22,7 @@ app.get("/api", (req, res) => {
 });
 
 // --- Rutas de la API, organizadas de forma modular ---
+app.use("/api/auth", authRouter);
 app.use("/api/productos", productosRouter);
 app.use("/api/contacto", contactoRouter);
 

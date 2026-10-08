@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import ProductList from "./ProductList";
 
 function Home({ productos, cargando, error, onAgregar, onEliminar }) {
-  const destacados = productos.filter((p) => p.destacado);
+  const destacados = (productos ?? []).filter(p => p.destacado)
 
   return (
     <>

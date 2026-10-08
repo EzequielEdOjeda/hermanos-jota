@@ -5,7 +5,7 @@
  * los estados de carga/éxito/error a nivel de UI.
  */
 
-const API_URL = import.meta.env.VITE_API_URL || "https://hermanos-jota-6p4o.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 /**
  * Wrapper sobre fetch que:
@@ -101,4 +101,27 @@ export function obtenerPerfil(token) {
 
 export function enviarMensajeContacto(payload) {
   return request("/contacto", { method: "POST", body: payload });
+}
+
+// ---------------------------------------------------------------------------
+// Usuarios (solo admin)
+// ---------------------------------------------------------------------------
+
+export async function obtenerUsuarios(token) {
+  const { data } = await request('/usuarios', { token })
+  return data
+}
+
+export async function cambiarRolUsuario(id, rol, token) {
+  const { data } = await request(`/usuarios/${id}/rol`, {
+    method: 'PATCH',
+    body: { rol },
+    token,
+  })
+  return data
+}
+
+export async function actualizarPerfil(payload, token) {
+  const data = await request('/auth/me', { method: 'PUT', body: payload, token })
+  return data.usuario
 }

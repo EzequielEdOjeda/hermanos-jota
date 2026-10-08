@@ -1,6 +1,6 @@
 # Hermanos Jota — E-commerce de Muebles (Full Stack)
 
-Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reconstrucción completa del sitio como una aplicación **cliente-servidor real**, con un backend propio en **Node.js + Express + MongoDB** y un frontend en **React** que consume esa API vía `fetch`. Incluye **autenticación con JWT y roles** (administrador / cliente).
+Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reconstrucción completa del sitio como una aplicación **cliente-servidor real**, con un backend propio en **Node.js + Express + MongoDB** y un frontend en **React** que consume esa API vía `fetch`. Incluye **autenticación con JWT y roles** (administrador / cliente), **panel de administración** con CRUD de productos y gestión de usuarios, y **perfil de usuario** editable.
 
 ![Web](image.png)
 
@@ -30,9 +30,9 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reco
 
 ## 📖 Descripción
 
-**Hermanos Jota** es un e-commerce de muebles de diseño. La aplicación quedó dividida en dos proyectos independientes que se ejecutan y se despliegan por separado, pero que conversan entre sí por HTTP:
+**Hermanos Jota** es un e-commerce de muebles de diseño. La aplicación está dividida en dos proyectos independientes que se ejecutan y se despliegan por separado, pero que conversan entre sí por HTTP:
 
-- **`/backend`** — API REST construida con Node.js, Express y Mongoose (MongoDB). Expone el catálogo de productos (con CRUD solo para administradores), la autenticación con JWT y un endpoint de contacto.
+- **`/backend`** — API REST construida con Node.js, Express y Mongoose (MongoDB). Expone el catálogo de productos (con CRUD solo para administradores), la autenticación con JWT, la gestión de usuarios (solo admins), la edición de perfil y un endpoint de contacto.
 - **`/client`** — Aplicación de React (SPA) con React Router que consume esa API y renderiza toda la interfaz de forma dinámica.
 
 ### Funcionalidades principales
@@ -40,11 +40,13 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reco
 - **Inicio**: Hero + piezas destacadas, obtenidas desde la API.
 - **Catálogo**: Grilla completa de productos con buscador y filtro por categoría (living, comedor, dormitorio, oficina).
 - **Detalle de producto**: Imagen, descripción, especificaciones técnicas y selector de cantidad, mostrado con renderizado condicional (sin recargar la página).
-- **Carrito de compras**: Panel flotante con contador en la barra de navegación, controles de cantidad y total, manejado 100% con estado de React.
+- **Carrito de compras**: Panel flotante con contador en la barra de navegación, controles de cantidad, subtotal por ítem y total, manejado 100% con estado de React.
 - **Contacto**: Formulario controlado con validación en el cliente y envío real al backend (`POST /api/contacto`).
 - **Registro e inicio de sesión**: formularios con validación, token JWT persistido y sesión restaurada al recargar la página (`GET /api/auth/me`).
+- **Edición de perfil**: cualquier usuario logueado puede cambiar su nombre y su contraseña desde `/perfil` (`PUT /api/auth/me`).
 - **Roles**: el Navbar muestra _Ingresar / Registrarse_ o un menú de usuario (con badge **Admin** si corresponde). Las rutas `/admin/*` solo se abren con rol `admin`.
-- **Panel de administración**: los administradores pueden crear, editar y eliminar productos desde la interfaz (botones visibles solo para ellos).
+- **Panel de administración de productos** (`/admin/productos`): tabla con miniatura, nombre, categoría, precio, stock y acciones. Botones **Editar** y **Eliminar** por fila, más un botón **+ Nuevo producto**. La eliminación pasa por un **modal de confirmación propio** (no usa `window.confirm`).
+- **Panel de administración de usuarios** (`/admin/usuarios`): tabla con nombre, email, rol y acción para alternar el rol entre `admin` y `cliente`. La sesión se actualiza al instante sin recargar. Un admin **no puede quitarse su propio rol** (protección en backend y en UI).
 
 ---
 
@@ -61,7 +63,7 @@ hermanos-jota/
 │       ├── models/           # Usuario.js y Producto.js (schemas de Mongoose)
 │       ├── data/
 │       │   └── productos.js  # Datos iniciales: los usa el seed (ya no es la "base de datos")
-│       ├── controllers/      # Lógica de cada recurso (auth, productos, contacto)
+│       ├── controllers/      # Lógica de cada recurso (auth, usuarios, productos, contacto)
 │       ├── routes/           # Rutas organizadas con express.Router
 │       ├── middlewares/      # auth (verificarToken / soloAdmin), validarObjectId,
 │       │                     # logger, notFound (404) y errorHandler
@@ -74,7 +76,8 @@ hermanos-jota/
 │       ├── main.jsx          # Punto de entrada: BrowserRouter + ToastProvider + AuthProvider
 │       ├── App.jsx           # Rutas + estado compartido (productos, carrito) + acciones de admin
 │       ├── context/          # AuthContext (sesión JWT) y ToastContext (avisos)
-│       ├── components/       # Navbar, Login, Register, RutaPrivada, ProductForm (admin),
+│       ├── components/       # Navbar, Login, Register, RutaPrivada, ProductForm,
+│       │                     # AdminProductos, AdminUsuarios, Perfil, ConfirmDialog,
 │       │                     # ProductCard, ProductList, ProductDetail, CartPanel, Toast...
 │       ├── services/
 │       │   └── api.js        # Cliente fetch centralizado hacia el backend
@@ -94,18 +97,21 @@ hermanos-jota/
 
 ### 🔌 API REST — Endpoints disponibles
 
-| Método   | Endpoint             | Acceso    | Descripción                                                                                          |
-| -------- | -------------------- | --------- | ---------------------------------------------------------------------------------------------------- |
-| `GET`    | `/api`               | Público   | Ruta de salud, útil para confirmar que el servidor está arriba.                                      |
-| `GET`    | `/api/productos`     | Público   | Listado completo de productos.                                                                       |
-| `GET`    | `/api/productos/:id` | Público   | Un producto por `id`. `400` si el id no es válido, `404` si no existe.                               |
-| `POST`   | `/api/productos`     | **Admin** | Crea un producto (`201`). Guarda en `creadoPor` al admin que lo creó.                                |
-| `PUT`    | `/api/productos/:id` | **Admin** | Actualiza los campos enviados; el resto queda igual.                                                 |
-| `DELETE` | `/api/productos/:id` | **Admin** | Elimina el producto.                                                                                 |
-| `POST`   | `/api/auth/register` | Público   | Crea una cuenta (rol `cliente`).                                                                     |
-| `POST`   | `/api/auth/login`    | Público   | Inicia sesión y devuelve el token.                                                                   |
-| `GET`    | `/api/auth/me`       | Token     | Devuelve el usuario dueño del token.                                                                 |
-| `POST`   | `/api/contacto`      | Público   | Recibe `{ nombre, email, mensaje }`, valida en el servidor y responde `201` o `400` con los errores. |
+| Método   | Endpoint              | Acceso    | Descripción                                                                                          |
+| -------- | --------------------- | --------- | ---------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api`                | Público   | Ruta de salud, útil para confirmar que el servidor está arriba.                                      |
+| `GET`    | `/api/productos`      | Público   | Listado completo de productos.                                                                       |
+| `GET`    | `/api/productos/:id`  | Público   | Un producto por `id`. `400` si el id no es válido, `404` si no existe.                               |
+| `POST`   | `/api/productos`      | **Admin** | Crea un producto (`201`). Guarda en `creadoPor` al admin que lo creó.                                |
+| `PUT`    | `/api/productos/:id`  | **Admin** | Actualiza los campos enviados; el resto queda igual.                                                 |
+| `DELETE` | `/api/productos/:id`  | **Admin** | Elimina el producto.                                                                                 |
+| `POST`   | `/api/auth/register`  | Público   | Crea una cuenta (rol `cliente`).                                                                     |
+| `POST`   | `/api/auth/login`     | Público   | Inicia sesión y devuelve el token.                                                                   |
+| `GET`    | `/api/auth/me`        | Token     | Devuelve el usuario dueño del token.                                                                 |
+| `PUT`    | `/api/auth/me`        | Token     | Actualiza `nombre` y/o `password` del usuario logueado. Requiere `passwordActual` para cambiarla.    |
+| `GET`    | `/api/usuarios`       | **Admin** | Listado de todos los usuarios (sin el hash de la contraseña).                                        |
+| `PATCH`  | `/api/usuarios/:id/rol` | **Admin** | Cambia el rol de un usuario (`admin` ↔ `cliente`). Un admin no puede degradarse a sí mismo.         |
+| `POST`   | `/api/contacto`       | Público   | Recibe `{ nombre, email, mensaje }`, valida en el servidor y responde `201` o `400` con los errores. |
 
 **Formato de las respuestas:** los productos responden `{ ok: true, data }`; la autenticación, `{ ok: true, usuario, token }`; y cualquier error, siempre `{ ok: false, error: "..." }` (lo arma el `errorHandler` centralizado). Cualquier ruta inexistente devuelve un `404` uniforme gracias al middleware `notFound`.
 
@@ -115,16 +121,17 @@ hermanos-jota/
 
 La API usa **JWT**: tras iniciar sesión, el cliente envía el token en cada petición protegida con el header `Authorization: Bearer <token>`.
 
-| Rol       | Qué puede hacer                                                                        |
-| --------- | -------------------------------------------------------------------------------------- |
-| `cliente` | Ver el catálogo, armar el carrito y contactarse. Es el rol de **todo** registro nuevo. |
-| `admin`   | Todo lo anterior + **crear, editar y eliminar productos** (CRUD).                      |
+| Rol       | Qué puede hacer                                                                                                  |
+| --------- | ---------------------------------------------------------------------------------------------------------------- |
+| `cliente` | Ver el catálogo, armar el carrito, contactarse y editar su propio perfil. Es el rol de **todo** registro nuevo. |
+| `admin`   | Todo lo anterior + **CRUD de productos** y **gestión de usuarios** (listar y cambiar roles).                    |
 
-| Endpoint                  | Body                          | Respuesta                                                                                      |
-| ------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `POST /api/auth/register` | `{ nombre, email, password }` | `201` `{ ok, usuario, token }`. El rol siempre es `cliente`: si el body trae `rol`, se ignora. |
-| `POST /api/auth/login`    | `{ email, password }`         | `200` `{ ok, usuario, token }` · `401` `"Credenciales inválidas"`.                             |
-| `GET /api/auth/me`        | — (header `Authorization`)    | `200` `{ ok, usuario }` · `401` si el token falta, es inválido o venció.                       |
+| Endpoint                  | Body                                    | Respuesta                                                                                      |
+| ------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `POST /api/auth/register` | `{ nombre, email, password }`           | `201` `{ ok, usuario, token }`. El rol siempre es `cliente`: si el body trae `rol`, se ignora. |
+| `POST /api/auth/login`    | `{ email, password }`                   | `200` `{ ok, usuario, token }` · `401` `"Credenciales inválidas"`.                             |
+| `GET /api/auth/me`        | — (header `Authorization`)              | `200` `{ ok, usuario }` · `401` si el token falta, es inválido o venció.                       |
+| `PUT /api/auth/me`        | `{ nombre?, passwordActual?, passwordNueva? }` | `200` `{ ok, usuario }` · `400` datos inválidos · `401` si la contraseña actual no coincide. |
 
 - Las contraseñas se guardan hasheadas con **bcrypt (10 rounds)**; nunca se devuelven en ningún JSON.
 - El token se firma con `{ id, rol }` y `JWT_SECRET`, y vence a los `7d` (configurable con `JWT_EXPIRES`).
@@ -168,13 +175,17 @@ npm run seed:users       # crea el admin y el cliente de prueba (omite los que y
 ## 📝 Decisiones tomadas
 
 - **Vite en lugar de Create React App.** La consigna original sugería `create-react-app`, pero esa herramienta está **deprecada y sin mantenimiento activo** por parte de Meta. Elegimos **Vite** porque cumple exactamente los mismos objetivos pedagógicos (componentes, `useState`, props, eventos, `.map`/`keys`, renderizado condicional y `fetch`), con arranque y build considerablemente más rápidos y sin warnings de dependencias desactualizadas.
-- **React Router (`react-router-dom`).** En las etapas anteriores la navegación se resolvía con un estado (`vista`) y renderizado condicional, sin librería de ruteo. Para el sprint de login y roles hacían falta **URLs reales** (`/login`, `/register`, `/admin/*`) y **rutas protegidas** (`RutaPrivada`), así que se migró a React Router. Las rutas están declaradas en `App.jsx`, que sigue concentrando el estado compartido (productos y carrito). `vercel.json` ya redirige todas las rutas a `index.html`, así que los links directos funcionan en producción.
+- **React Router (`react-router-dom`).** En las etapas anteriores la navegación se resolvía con un estado (`vista`) y renderizado condicional, sin librería de ruteo. Para el sprint de login y roles hacían falta **URLs reales** (`/login`, `/register`, `/admin/*`, `/perfil`) y **rutas protegidas** (`RutaPrivada`), así que se migró a React Router. Las rutas están declaradas en `App.jsx`, que sigue concentrando el estado compartido (productos y carrito). `vercel.json` ya redirige todas las rutas a `index.html`, así que los links directos funcionan en producción.
 - **Carrito 100% en estado de React (sin `localStorage`).** La versión anterior (sin backend) persistía el carrito en `localStorage`. En esta etapa el objetivo explícito es practicar `useState`/props, así que el carrito vive únicamente en `App.js` y se reinicia al recargar la página. Es un trade-off consciente: menos "persistencia real", más foco en el objetivo de aprendizaje de la consigna.
 - **`cors` en el backend.** Como el cliente (`http://localhost:5173`) y la API (`http://localhost:4000`) corren en orígenes distintos durante el desarrollo, se agregó el middleware `cors` para habilitar las peticiones entre ambos. Sin esto, el navegador bloquea el `fetch` por la política de mismo origen.
-- **Endpoint `POST /api/contacto`.** No estaba explícitamente pedido, pero se agregó para que el formulario de contacto también hable con el backend real (usando `express.json()` para parsear el body), en línea con el espíritu del proyecto: "una verdadera aplicación cliente-servidor". Valida los mismos campos tanto en el cliente como en el servidor.
+- **Endpoint `POST /api/contacto`.** No estaba explícitamente pedido, pero se agregó para que el formulario de contacto también hable con el backend real (usando `express.json()` para parsear el body), en línea con el espíritu del proyecto: "una verdadera aplicación cliente-servidor". Valida los mismos campos tanto en el cliente como en el servidor. Los mensajes **no se persisten**: el endpoint solo demuestra el ciclo completo de una petición POST.
 - **MongoDB (Mongoose) en lugar de datos en memoria.** El catálogo y los usuarios viven en MongoDB (Atlas en producción). `backend/src/data/productos.js` se conserva solo como fuente de datos iniciales para `npm run seed`. El modelo `Producto` incluye los campos del sprint (`nombre`, `descripcion`, `precio`, `stock`, `imagenUrl`, `creadoPor`) más los que el catálogo ya usaba (`slug`, `categoria`, `descripcionCorta`, `medidas`, `materiales`, `acabado`, `peso`, `detalleExtra`, `destacado`). Al sembrar, `imagen` pasa a `imagenUrl` y `descripcionLarga` a `descripcion`.
 - **JWT guardado en `localStorage`.** Es la opción más simple para una SPA con backend en otro dominio (Vercel + Render) y permite restaurar la sesión al recargar. El trade-off conocido es que un XSS podría leer el token; por eso el rol y los permisos se verifican **siempre en el backend** (`verificarToken` + `soloAdmin`) y `RutaPrivada` en el cliente es solo una ayuda de UX.
 - **Respuestas con formato `{ ok, data | error }`.** Los endpoints de productos devuelven `{ ok: true, data }` en lugar del array/objeto "pelado" de las etapas anteriores, para que éxitos y errores tengan la misma forma.
+- **Modal de confirmación propio en lugar de `window.confirm`.** El navegador bloquea la ejecución con el `confirm` nativo y no permite personalizar el estilo. Se implementó un componente `ConfirmDialog` reutilizable, con fondo oscurecido, animación y botones con la identidad de marca. Se usa al eliminar un producto (desde el panel admin, la home, el catálogo y el detalle).
+- **Panel de administración ampliado.** Además del CRUD de productos, se agregó una sección de **gestión de usuarios** (`/admin/usuarios`) que permite listar cuentas y alternar su rol. La actualización del rol se refleja al instante (sin recargar) porque el estado local se actualiza con merge parcial (`{ ...usuario, rol: nuevoRol }`) en lugar de reemplazar el objeto entero. Como salvaguarda, un admin **no puede quitarse a sí mismo el rol** — está bloqueado tanto en el backend como deshabilitado en la UI.
+- **Edición de perfil.** Se agregó `PUT /api/auth/me` para que cualquier usuario logueado pueda actualizar su nombre y, opcionalmente, su contraseña (pidiendo la actual como confirmación). Al guardar, el `AuthContext` actualiza el usuario en memoria para que el Navbar refleje el cambio sin necesidad de recargar.
+- **Tablas admin responsivas.** Las tablas de productos y usuarios van envueltas en un contenedor con `overflow-x: auto` y `min-width` en la tabla, para que en mobile se pueda hacer scroll horizontal sin que se aplasten las columnas.
 - **ESLint Flat Config + Prettier.** Se usó el nuevo formato de configuración de ESLint (`eslint.config.js`), con reglas separadas para el backend (entorno Node) y el cliente (entorno browser + JSX + hooks de React), y `eslint-plugin-prettier` / `eslint-config-prettier` para que Prettier sea la única fuente de verdad sobre el estilo del código.
 
 ---
@@ -225,7 +236,7 @@ cp .env.example .env      # define VITE_API_URL=http://localhost:4000/api
 npm run dev
 ```
 
-La aplicación queda disponible en **http://localhost:5173**. Con el backend corriendo en paralelo, el catálogo, el detalle de producto, el formulario de contacto, el registro/inicio de sesión y el panel de administración van a funcionar de punta a punta.
+La aplicación queda disponible en **http://localhost:5173**. Con el backend corriendo en paralelo, el catálogo, el detalle de producto, el formulario de contacto, el registro/inicio de sesión, la edición de perfil y el panel de administración van a funcionar de punta a punta.
 
 > Si cambiás el puerto del backend, actualizá `VITE_API_URL` en `client/.env` para que apunte al puerto correcto.
 

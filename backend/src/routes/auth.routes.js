@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, me, register } from "../controllers/auth.controller.js";
+import { login, me, register, actualizarPerfil, } from "../controllers/auth.controller.js";
 import { verificarToken } from "../middlewares/auth.js";
 
 const router = Router();
@@ -12,5 +12,7 @@ router.post("/login", login);
 
 // GET /api/auth/me  (Authorization: Bearer <token>) → 200 { usuario }
 router.get("/me", verificarToken, me);
+
+router.put('/me', verificarToken, actualizarPerfil) 
 
 export default router;

@@ -13,6 +13,10 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import RutaPrivada from "./components/RutaPrivada";
 import ProductForm from "./components/ProductForm";
+import AdminProductos from "./components/AdminProductos";
+import AdminUsuarios from "./components/AdminUsuarios";
+import Perfil from "./components/Perfil";
+import ConfirmDialog from "./components/ConfirmDialog";
 
 import { useAuth } from "./context/AuthContext";
 import { useToast } from "./context/ToastContext";
@@ -58,6 +62,7 @@ function App() {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+  const [confirmacion, setConfirmacion] = useState(null);  
 
   const [carrito, setCarrito] = useState([]);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
@@ -72,7 +77,7 @@ function App() {
 
       try {
         const data = await obtenerProductos();
-        if (activo) setProductos(data);
+        if (activo) setProductos(data ?? []);
       } catch (err) {
         if (activo) setError(err.message);
       } finally {
@@ -166,24 +171,26 @@ function App() {
     }
   }
 
-  /** Pide confirmación y elimina. Devuelve true si el producto se eliminó. */
-  async function eliminarProductoDelCatalogo(producto) {
-    const confirmado = window.confirm(
-      `¿Eliminar "${producto.nombre}" del catálogo? Esta acción no se puede deshacer.`,
-    );
-    if (!confirmado) return false;
+  // Se llama al hacer clic en "Eliminar": abre el modal
+	function pedirEliminarProducto(producto) {
+	  setConfirmacion({ producto });
+	}
 
-    try {
-      await eliminarProducto(producto.id, token);
-      setProductos((prev) => prev.filter((p) => p.id !== producto.id));
-      setCarrito((prev) => prev.filter((item) => item.id !== producto.id));
-      mostrarToast(`"${producto.nombre}" se eliminó del catálogo`);
-      return true;
-    } catch (err) {
-      if (!manejarSesionVencida(err)) mostrarToast(err.message);
-      return false;
-    }
-  }
+	// Se llama cuando el usuario confirma en el modal
+	async function eliminarProductoDelCatalogo(producto) {
+	  try {
+		await eliminarProducto(producto.id, token);
+		setProductos((prev) => prev.filter((p) => p.id !== producto.id));
+		setCarrito((prev) => prev.filter((item) => item.id !== producto.id));
+		mostrarToast(`"${producto.nombre}" se eliminó del catálogo`);
+		return true;
+	  } catch (err) {
+		if (!manejarSesionVencida(err)) mostrarToast(err.message);
+		return false;
+	  } finally {
+		setConfirmacion(null);
+	  }
+	}
 
   return (
     <>
@@ -199,7 +206,7 @@ function App() {
                 cargando={cargando}
                 error={error}
                 onAgregar={agregarAlCarrito}
-                onEliminar={eliminarProductoDelCatalogo}
+                onEliminar={pedirEliminarProducto}
               />
             }
           />
@@ -211,7 +218,7 @@ function App() {
                 cargando={cargando}
                 error={error}
                 onAgregar={agregarAlCarrito}
-                onEliminar={eliminarProductoDelCatalogo}
+                onEliminar={pedirEliminarProducto}
               />
             }
           />
@@ -223,17 +230,37 @@ function App() {
                 cargando={cargando}
                 error={error}
                 onAgregar={agregarAlCarrito}
-                onEliminar={eliminarProductoDelCatalogo}
+                onEliminar={pedirEliminarProducto}
               />
             }
           />
           <Route path="/contacto" element={<ContactForm />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+		  <Route
+			  path="/perfil"
+			  element={
+				<RutaPrivada>
+				  <Perfil />
+				</RutaPrivada>
+			  }
+			/>
 
           {/* Todo lo que cuelga de /admin exige sesión iniciada con rol admin. */}
           <Route path="/admin" element={<RutaPrivada soloAdmin />}>
-            <Route index element={<Navigate to="crear-producto" replace />} />
+            <Route index element={<Navigate to="productos" replace />} />
+            <Route
+              path="productos"
+              element={
+                <AdminProductos
+                  productos={productos}
+                  cargando={cargando}
+                  error={error}
+                  onEliminar={pedirEliminarProducto}
+                />
+              }
+            />
+            <Route path="usuarios" element={<AdminUsuarios />} />
             <Route
               path="crear-producto"
               element={
@@ -265,13 +292,26 @@ function App() {
 
       <Footer />
 
-      <CartPanel
+            <CartPanel
         abierto={carritoAbierto}
         carrito={carrito}
         total={totalCarrito}
         onCerrar={() => setCarritoAbierto(false)}
         onCambiarCantidad={cambiarCantidadCarrito}
         onQuitar={quitarDelCarrito}
+      />
+
+      <ConfirmDialog
+        abierto={!!confirmacion}
+        titulo="Eliminar producto"
+        mensaje={
+          confirmacion
+            ? `¿Seguro que querés eliminar "${confirmacion.producto.nombre}"? Esta acción no se puede deshacer.`
+            : ""
+        }
+        textoConfirmar="Sí, eliminar"
+        onConfirmar={() => eliminarProductoDelCatalogo(confirmacion.producto)}
+        onCancelar={() => setConfirmacion(null)}
       />
     </>
   );

@@ -46,7 +46,9 @@ function CartPanel({ abierto, carrito, total, onCerrar, onCambiarCantidad, onQui
                 </div>
                 <div className="cart-item__info">
                   <p className="cart-item__name">{item.nombre}</p>
-                  <span className="cart-item__price">{formatearPrecio(item.precio)}</span>
+                  <span className="cart-item__price">
+					  {formatearPrecio(item.precio * item.cantidad)}
+					</span>
                   <div className="cart-item__controls">
                     <button
                       className="cart-qty-btn"

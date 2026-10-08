@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import bcrypt from 'bcryptjs'
 import Usuario from "../models/Usuario.js";
 import { crearError } from "../utils/httpError.js";
 
@@ -13,6 +14,61 @@ function firmarToken(usuario) {
   return jwt.sign({ id: usuario.id, rol: usuario.rol }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES || "7d",
   });
+}
+
+/**
+ * PUT /api/auth/me — actualiza el perfil del usuario logueado.
+ * Body: { nombre?, passwordActual?, passwordNueva? }
+ * - El nombre es opcional.
+ * - Para cambiar la contraseña hay que enviar passwordActual + passwordNueva.
+ */
+export async function actualizarPerfil(req, res, next) {
+  try {
+    const { nombre, passwordActual, passwordNueva } = req.body ?? {}
+    const usuario = await Usuario.findById(req.usuario._id)
+    if (!usuario) {
+      return res.status(404).json({ ok: false, error: 'Usuario no encontrado' })
+    }
+
+    // Cambio de nombre
+    if (nombre !== undefined) {
+      const limpio = String(nombre).trim()
+      if (limpio.length < 3) {
+        return res.status(400).json({ ok: false, error: 'El nombre debe tener al menos 3 caracteres' })
+      }
+      usuario.nombre = limpio
+    }
+
+    // Cambio de contraseña (requiere la actual)
+    if (passwordNueva) {
+      if (!passwordActual) {
+        return res.status(400).json({ ok: false, error: 'Ingresá tu contraseña actual' })
+      }
+      if (String(passwordNueva).length < 6) {
+        return res.status(400).json({ ok: false, error: 'La nueva contraseña debe tener al menos 6 caracteres' })
+      }
+      const coincide = await bcrypt.compare(passwordActual, usuario.password)
+      if (!coincide) {
+        return res.status(401).json({ ok: false, error: 'La contraseña actual no es correcta' })
+      }
+      usuario.password = await bcrypt.hash(passwordNueva, 10)
+    }
+
+    await usuario.save()
+
+    // Devolvemos el usuario SIN la contraseña (mismo formato que /auth/me)
+    res.json({
+      ok: true,
+      usuario: {
+        id: usuario._id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
 }
 
 /**

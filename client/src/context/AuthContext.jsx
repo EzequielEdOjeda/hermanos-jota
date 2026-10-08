@@ -55,6 +55,11 @@ function leerUsuarioGuardado() {
  *   petición protegida dirá la verdad.
  */
 export function AuthProvider({ children }) {
+  const actualizarUsuarioEnSesion = (usuarioNuevo) => {
+  setUsuario(usuarioNuevo)
+  // Si guardás el usuario en localStorage, actualizalo también:
+  // localStorage.setItem('usuario', JSON.stringify(usuarioNuevo))
+}
   const [token, setToken] = useState(() => leer(CLAVE_TOKEN));
   const [usuario, setUsuario] = useState(() => (leer(CLAVE_TOKEN) ? leerUsuarioGuardado() : null));
   const [cargando, setCargando] = useState(() => Boolean(leer(CLAVE_TOKEN)));
@@ -123,9 +128,10 @@ export function AuthProvider({ children }) {
       login,
       register,
       logout,
+	  actualizarUsuarioEnSesion,
       esAdmin: usuario?.rol === "admin",
     }),
-    [usuario, token, cargando, login, register, logout],
+    [usuario, token, cargando, login, register, logout, actualizarUsuarioEnSesion],
   );
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;

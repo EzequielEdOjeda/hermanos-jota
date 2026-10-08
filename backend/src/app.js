@@ -8,6 +8,7 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import authRouter from "./routes/auth.routes.js";
 import productosRouter from "./routes/productos.routes.js";
 import contactoRouter from "./routes/contacto.routes.js";
+import usuarioRoutes from './routes/usuario.routes.js'
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.get("/api", (req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/productos", productosRouter);
 app.use("/api/contacto", contactoRouter);
+app.use('/api/usuarios', usuarioRoutes)
 
 // --- Manejo de 404 y errores (siempre al final) ---
 app.use(notFound);

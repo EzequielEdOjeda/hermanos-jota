@@ -116,11 +116,22 @@ function MenuUsuario() {
           </div>
 
           {esAdmin && (
-            <Link to="/admin/crear-producto" className="dropdown-menu__item">
-              <i className="bi bi-gear" aria-hidden="true"></i>
-              Panel admin
-            </Link>
+            <>
+              <Link to="/admin/productos" className="dropdown-menu__item">
+                <i className="bi bi-box-seam" aria-hidden="true"></i>
+                Gestionar productos
+              </Link>
+              <Link to="/admin/usuarios" className="dropdown-menu__item">
+                <i className="bi bi-people" aria-hidden="true"></i>
+                Gestionar usuarios
+              </Link>
+            </>
           )}
+
+          <Link to="/perfil" className="dropdown-menu__item">
+            <i className="bi bi-person-gear" aria-hidden="true"></i>
+            Editar perfil
+          </Link>
 
           <button type="button" className="btn-logout" onClick={cerrarSesion}>
             <i className="bi bi-box-arrow-right" aria-hidden="true"></i>
@@ -161,10 +172,19 @@ function SesionMovil() {
       </div>
 
       {esAdmin && (
-        <Link to="/admin/crear-producto" className="btn btn-outline btn-sm">
-          Panel admin
-        </Link>
+        <>
+          <Link to="/admin/productos" className="btn btn-outline btn-sm">
+            Gestionar productos
+          </Link>
+          <Link to="/admin/usuarios" className="btn btn-outline btn-sm">
+            Gestionar usuarios
+          </Link>
+        </>
       )}
+
+      <Link to="/perfil" className="btn btn-outline btn-sm">
+        Editar perfil
+      </Link>
 
       <button type="button" className="btn-logout btn-logout--block" onClick={cerrarSesion}>
         Cerrar sesión

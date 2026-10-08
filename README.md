@@ -11,7 +11,7 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. La a
 | 🚙 **Frontend (Mueblería Jota)**   | [https://hermanosjota.vercel.app/](https://hermanosjota.vercel.app/)                       |
 | ⚙️ **Backend API (Hermanos Jota)** | [https://hermanos-jota-6p4o.onrender.com/api](https://hermanos-jota-6p4o.onrender.com/api) |
 
-> **Nota:** API desplegada en [Render](https://render.com) (plan gratuito). Puede tardar unos segundos en "despertar" tras un periodo de inactividad. Hasta que `MONGODB_URI` esté configurada en Render, el backend desplegado no va a poder levantar (ver la guía de conexión).
+> **Nota:** API desplegada en [Render](https://render.com) (plan gratuito). Puede tardar unos segundos en "despertar" tras un periodo de inactividad. Hasta que `MONGODB_URI` esté configurada en Render, el backend desplegado no va a poder levantar.
 
 ---
 

@@ -65,7 +65,6 @@ function Login() {
             Hermanos Jota
           </div>
 
-          <p className="eyebrow">Bienvenido de nuevo</p>
           <h1 className="section-title auth-card__title">Iniciar sesión</h1>
           <p className="auth-card__subtitle">Ingresá tus datos para ingresar a tu cuenta.</p>
 

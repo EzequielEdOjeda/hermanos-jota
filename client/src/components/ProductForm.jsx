@@ -178,151 +178,155 @@ function ProductForm({ modo, onGuardado, onToast }) {
   return (
     <section className="section">
       <div className="container">
-        <p className="eyebrow">Panel de administración</p>
-        <h1 className="section-title">{esEdicion ? "Editar producto" : "Nuevo producto"}</h1>
-        <p className="section-intro" style={{ color: "var(--color-ink-soft)" }}>
-          {esEdicion
-            ? "Modificá los datos del producto y guardá los cambios."
-            : "Completá los datos para agregar una pieza nueva al catálogo."}
-        </p>
-
-        <form
-          className="contact-form"
-          style={{ maxWidth: "640px" }}
-          onSubmit={manejarEnvio}
-          noValidate
-        >
-          {errorGeneral && (
-            <p className="field-error" style={{ display: "block" }}>
-              {errorGeneral}
+        <div className="form-page">
+          <div className="form-card">
+            <p className="eyebrow">Panel de administración</p>
+            <h1 className="section-title">{esEdicion ? "Editar producto" : "Nuevo producto"}</h1>
+            <p className="section-intro" style={{ color: "var(--color-ink-soft)" }}>
+              {esEdicion
+                ? "Modificá los datos del producto y guardá los cambios."
+                : "Completá los datos para agregar una pieza nueva al catálogo."}
             </p>
-          )}
 
-          <div className={`form-field${errores.nombre ? " has-error" : ""}`}>
-            <label htmlFor="nombre">Nombre</label>
-            <input
-              type="text"
-              id="nombre"
-              name="nombre"
-              value={valores.nombre}
-              onChange={manejarCambio}
-              placeholder="Ej: Sofá Patagonia"
-            />
-            <span className="field-error">{errores.nombre}</span>
-          </div>
+            <form
+              className="contact-form"
+              style={{ maxWidth: "640px" }}
+              onSubmit={manejarEnvio}
+              noValidate
+            >
+              {errorGeneral && (
+                <p className="field-error" style={{ display: "block" }}>
+                  {errorGeneral}
+                </p>
+              )}
 
-          <div className="form-field">
-            <label htmlFor="descripcion">Descripción</label>
-            <textarea
-              id="descripcion"
-              name="descripcion"
-              rows="4"
-              value={valores.descripcion}
-              onChange={manejarCambio}
-              placeholder="Materiales, medidas, terminación…"
-            />
-          </div>
-
-          <div className="form-row">
-            <div className={`form-field${errores.precio ? " has-error" : ""}`}>
-              <label htmlFor="precio">Precio (ARS)</label>
-              <input
-                type="number"
-                id="precio"
-                name="precio"
-                min="0"
-                step="1"
-                value={valores.precio}
-                onChange={manejarCambio}
-                placeholder="950000"
-              />
-              <span className="field-error">{errores.precio}</span>
-            </div>
-
-            <div className={`form-field${errores.stock ? " has-error" : ""}`}>
-              <label htmlFor="stock">Stock</label>
-              <input
-                type="number"
-                id="stock"
-                name="stock"
-                min="0"
-                step="1"
-                value={valores.stock}
-                onChange={manejarCambio}
-                placeholder="10"
-              />
-              <span className="field-error">{errores.stock}</span>
-            </div>
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="imagenUrl">URL de la imagen</label>
-            <input
-              type="text"
-              id="imagenUrl"
-              name="imagenUrl"
-              value={valores.imagenUrl}
-              onChange={manejarCambio}
-              placeholder="/img/sofa-patagonia.png o https://…"
-            />
-          </div>
-
-          {valores.imagenUrl && (
-            <div className="image-preview">
-              <img
-                src={valores.imagenUrl}
-                alt="Vista previa"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            </div>
-          )}
-
-          <div className="form-row">
-            <div className="form-field">
-              <label htmlFor="categoria">Categoría</label>
-              <select
-                id="categoria"
-                name="categoria"
-                value={valores.categoria}
-                onChange={manejarCambio}
-              >
-                {CATEGORIAS_FORM.map((cat) => (
-                  <option key={cat.valor} value={cat.valor}>
-                    {cat.etiqueta}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-field checkbox-field">
-              <label htmlFor="destacado">
+              <div className={`form-field${errores.nombre ? " has-error" : ""}`}>
+                <label htmlFor="nombre">Nombre</label>
                 <input
-                  type="checkbox"
-                  id="destacado"
-                  name="destacado"
-                  checked={valores.destacado}
+                  type="text"
+                  id="nombre"
+                  name="nombre"
+                  value={valores.nombre}
                   onChange={manejarCambio}
+                  placeholder="Ej: Sofá Patagonia"
                 />
-                Mostrar en destacados (home)
-              </label>
-            </div>
-          </div>
+                <span className="field-error">{errores.nombre}</span>
+              </div>
 
-          <div className="form-actions">
-            <button className="btn btn-primary" type="submit" disabled={estado === "guardando"}>
-              {estado === "guardando"
-                ? "Guardando…"
-                : esEdicion
-                  ? "Guardar cambios"
-                  : "Crear producto"}
-            </button>
-            <Link to="/admin" className="btn btn-outline">
-              Cancelar
-            </Link>
+              <div className="form-field">
+                <label htmlFor="descripcion">Descripción</label>
+                <textarea
+                  id="descripcion"
+                  name="descripcion"
+                  rows="4"
+                  value={valores.descripcion}
+                  onChange={manejarCambio}
+                  placeholder="Materiales, medidas, terminación…"
+                />
+              </div>
+
+              <div className="form-row">
+                <div className={`form-field${errores.precio ? " has-error" : ""}`}>
+                  <label htmlFor="precio">Precio (ARS)</label>
+                  <input
+                    type="number"
+                    id="precio"
+                    name="precio"
+                    min="0"
+                    step="1"
+                    value={valores.precio}
+                    onChange={manejarCambio}
+                    placeholder="950000"
+                  />
+                  <span className="field-error">{errores.precio}</span>
+                </div>
+
+                <div className={`form-field${errores.stock ? " has-error" : ""}`}>
+                  <label htmlFor="stock">Stock</label>
+                  <input
+                    type="number"
+                    id="stock"
+                    name="stock"
+                    min="0"
+                    step="1"
+                    value={valores.stock}
+                    onChange={manejarCambio}
+                    placeholder="10"
+                  />
+                  <span className="field-error">{errores.stock}</span>
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="imagenUrl">URL de la imagen</label>
+                <input
+                  type="text"
+                  id="imagenUrl"
+                  name="imagenUrl"
+                  value={valores.imagenUrl}
+                  onChange={manejarCambio}
+                  placeholder="/img/sofa-patagonia.png o https://…"
+                />
+              </div>
+
+              {valores.imagenUrl && (
+                <div className="image-preview">
+                  <img
+                    src={valores.imagenUrl}
+                    alt="Vista previa"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                </div>
+              )}
+
+              <div className="form-row">
+                <div className="form-field">
+                  <label htmlFor="categoria">Categoría</label>
+                  <select
+                    id="categoria"
+                    name="categoria"
+                    value={valores.categoria}
+                    onChange={manejarCambio}
+                  >
+                    {CATEGORIAS_FORM.map((cat) => (
+                      <option key={cat.valor} value={cat.valor}>
+                        {cat.etiqueta}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-field checkbox-field">
+                  <label htmlFor="destacado">
+                    <input
+                      type="checkbox"
+                      id="destacado"
+                      name="destacado"
+                      checked={valores.destacado}
+                      onChange={manejarCambio}
+                    />
+                    Mostrar en destacados (home)
+                  </label>
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button className="btn btn-primary" type="submit" disabled={estado === "guardando"}>
+                  {estado === "guardando"
+                    ? "Guardando…"
+                    : esEdicion
+                      ? "Guardar cambios"
+                      : "Crear producto"}
+                </button>
+                <Link to="/admin" className="btn btn-outline">
+                  Cancelar
+                </Link>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </div>
     </section>
   );

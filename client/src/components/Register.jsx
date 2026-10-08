@@ -75,7 +75,6 @@ function Register() {
             Hermanos Jota
           </div>
 
-          <p className="eyebrow">Sumate a la casa</p>
           <h1 className="section-title auth-card__title">Creá tu cuenta</h1>
           <p className="auth-card__subtitle">
             Guardá tus piezas favoritas y seguí el estado de tus pedidos desde un solo lugar.

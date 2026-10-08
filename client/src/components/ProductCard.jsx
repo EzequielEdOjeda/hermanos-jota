@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { formatearPrecio } from "../utils/format";
+import { getImagenProducto, onImagenError } from "../utils/imagen";
 
 /**
  * Tarjeta individual de producto. La navegación al detalle la resuelve
@@ -12,7 +13,12 @@ function ProductCard({ producto, onAgregar }) {
   return (
     <article className="product-card">
       <Link to={`/productos/${producto._id}`} className="product-card__media">
-        <img src={producto.imagenUrl} alt={producto.nombre} loading="lazy" />
+        <img
+          src={getImagenProducto(producto)}
+          alt={producto.nombre}
+          loading="lazy"
+          onError={onImagenError}
+        />
       </Link>
       <div className="product-card__body">
         <span className="product-card__category">{producto.categoria}</span>

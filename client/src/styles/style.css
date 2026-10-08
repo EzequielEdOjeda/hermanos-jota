@@ -58,11 +58,26 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh; /* mejor en mobile: no cuenta la barra del navegador */
 }
 
 /* Cuando el carrito está abierto, bloqueamos el scroll del body */
 body.no-scroll {
   overflow: hidden;
+}
+
+/* El contenedor que monta React también tiene que poder estirarse
+   para que el footer con margin-top:auto se pegue al fondo. */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+}
+
+#root > main {
+  flex: 1 0 auto;
 }
 
 img {
@@ -1114,28 +1129,13 @@ button {
   .skeleton-line {
     animation: none;
   }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 0% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skeleton-card {
-    animation: none;
-  }
   * {
     scroll-behavior: auto !important;
   }
 }
 
 /* ==========================================================================
-   CATÁLOGO (productos.html) — filtros y buscador
+   CATÁLOGO — filtros y buscador
    ========================================================================== */
 .catalog-toolbar {
   display: flex;
@@ -1197,7 +1197,7 @@ button {
 }
 
 /* ==========================================================================
-   DETALLE DE PRODUCTO (producto.html)
+   DETALLE DE PRODUCTO
    ========================================================================== */
 .breadcrumb {
   font-size: 0.8rem;
@@ -1241,7 +1241,10 @@ button {
   margin-bottom: 1rem;
 }
 
-.product-detail__desc {
+/* Alias: acepta los dos nombres de clase por si el JSX usa
+   "product-detail__description" en algún lado. */
+.product-detail__desc,
+.product-detail__description {
   color: var(--color-ink-soft);
   font-size: 1rem;
   max-width: 60ch;
@@ -1262,44 +1265,10 @@ button {
 }
 
 .spec-table th {
-  width: 40%;
+  width: 30%;
   color: var(--color-ink-soft);
   font-weight: 500;
-}
-
-.quantity-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 1.5rem 0;
-}
-
-.quantity-stepper {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.quantity-stepper button {
-  background: var(--color-alabastro);
-  border: none;
-  width: 38px;
-  height: 38px;
-  font-size: 1.1rem;
-  color: var(--color-siena-dark);
-}
-
-.quantity-stepper input {
-  width: 44px;
-  text-align: center;
-  border: none;
-  border-left: 1px solid var(--color-border);
-  border-right: 1px solid var(--color-border);
-  height: 38px;
-  font-family: var(--font-body);
-  font-size: 0.95rem;
+  white-space: nowrap;
 }
 
 .badge-row {
@@ -1336,6 +1305,84 @@ button {
     position: sticky;
     top: 6rem;
   }
+}
+
+/* ==========================================================================
+   STEPPER DE CANTIDAD (detalle de producto)
+   ========================================================================== */
+.qty-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.qty-stepper > label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.qty-stepper__controls {
+  display: inline-flex;
+  align-items: stretch;
+  width: fit-content; /* clave: no se estira a todo el ancho */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-white);
+  height: 44px;
+}
+
+.qty-stepper__controls button {
+  width: 44px;
+  height: 100%;
+  border: none;
+  background: var(--color-alabastro);
+  color: var(--color-siena-dark);
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.qty-stepper__controls button:hover:not(:disabled) {
+  background: var(--color-siena);
+  color: var(--color-white);
+}
+
+.qty-stepper__controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.qty-stepper__controls input {
+  width: 60px;
+  height: 100%;
+  border: none;
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  background: var(--color-white);
+  padding: 0;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.qty-stepper__controls input::-webkit-outer-spin-button,
+.qty-stepper__controls input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 /* ==========================================================================
@@ -1661,10 +1708,9 @@ button {
   }
 }
 
-/* ============================================
-   Panel de administración (CRUD de productos)
-   ============================================ */
-
+/* ==========================================================================
+   PANEL DE ADMINISTRACIÓN (CRUD de productos)
+   ========================================================================== */
 .admin-table-wrapper {
   overflow-x: auto;
   background: var(--color-white);
@@ -1850,6 +1896,19 @@ button {
   align-items: center;
 }
 
+/* Página de formulario (crear/editar producto) centrada */
+.form-page {
+  display: flex;
+  justify-content: center;
+}
+
+.form-page .form-card,
+.form-page .contact-form {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
 @media (max-width: 640px) {
   .admin-table {
     min-width: 560px;
@@ -1866,7 +1925,7 @@ button {
 }
 
 /* ==========================================================================
-   (Login / Registro)
+   LOGIN / REGISTRO
    ========================================================================== */
 .auth-wrap {
   display: flex;
@@ -1977,31 +2036,6 @@ input::-webkit-strong-password-auto-fill-button {
   background: rgba(160, 82, 45, 0.08);
 }
 
-/* ---- Responsive ---- */
-@media (max-width: 480px) {
-  .auth-card {
-    padding: 2rem 1.25rem;
-  }
-
-  .auth-card__title {
-    font-size: 1.5rem;
-  }
-
-  .auth-card .form-field input {
-    font-size: 1rem; /* evita el zoom automático en iOS */
-  }
-
-  .auth-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-}
-
-.field-toggle:hover {
-  color: var(--color-siena);
-}
-
 .auth-row {
   display: flex;
   align-items: center;
@@ -2065,4 +2099,31 @@ input::-webkit-strong-password-auto-fill-button {
   padding: 0;
   font: inherit;
   cursor: pointer;
+}
+
+/* ---- Responsive auth ---- */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 2rem 1.25rem;
+  }
+
+  .auth-card__title {
+    font-size: 1.5rem;
+  }
+
+  .auth-card .form-field input {
+    font-size: 1rem; /* evita el zoom automático en iOS */
+  }
+
+  .auth-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+.cart-item__image img.is-placeholder {
+  object-fit: contain;
+  padding: 20%;
+  background: var(--color-alabastro);
 }

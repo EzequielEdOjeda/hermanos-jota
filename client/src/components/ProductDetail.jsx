@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 
 import { formatearPrecio } from "../utils/format";
 import { obtenerProductoPorId } from "../services/api";
+import { getImagenProducto, onImagenError } from "../utils/imagen";
 
 /**
  * Página de detalle de un producto.
@@ -89,14 +90,14 @@ function ProductDetail({ onAgregar }) {
 
         <div className="product-detail">
           <div className="product-detail__media">
-            <img src={producto.imagenUrl} alt={producto.nombre} />
+            <img src={getImagenProducto(producto)} alt={producto.nombre} onError={onImagenError} />
           </div>
 
           <div className="product-detail__info">
             <span className="product-card__category">{producto.categoria}</span>
             <h1>{producto.nombre}</h1>
             <p className="product-detail__price">{formatearPrecio(producto.precio)}</p>
-            <p className="product-detail__description">{producto.descripcion}</p>
+            <p className="product-detail__desc">{producto.descripcion}</p>
 
             <table className="spec-table">
               <tbody>

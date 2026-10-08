@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { eliminarProducto } from "../services/api";
 import { formatearPrecio } from "../utils/format";
+import { getImagenProducto, onImagenError } from "../utils/imagen";
 
 /**
  * Panel de administración: lista todos los productos en una tabla con
@@ -80,9 +81,10 @@ function AdminDashboard({ productos, cargando, error, onRecargar, onToast }) {
                     <td>
                       <img
                         className="admin-table__thumb"
-                        src={producto.imagenUrl}
+                        src={getImagenProducto(producto)}
                         alt={producto.nombre}
                         loading="lazy"
+                        onError={onImagenError}
                       />
                     </td>
                     <td>

@@ -9,6 +9,9 @@
     "dev": "node --watch server.js",
     "seed": "node src/seed.js"
   },
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

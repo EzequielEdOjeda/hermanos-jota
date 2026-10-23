@@ -8,14 +8,21 @@ export const PLACEHOLDER_IMG = "/img/logo.svg";
  * Útil para poner en el atributo `src` directamente.
  */
 export function getImagenProducto(producto) {
-  const url = producto?.imagenUrl?.trim();
-  return url ? url : PLACEHOLDER_IMG;
+  // Usamos 'imagen' porque así se llama el campo en MongoDB
+  const url = producto?.imagen?.trim() || producto?.imagenUrl?.trim();
+
+  if (!url) return PLACEHOLDER_IMG;
+
+  // Si la URL empieza con "/", le agregamos la base (para que funcione en Vercel)
+  if (url.startsWith("/")) {
+    return `${import.meta.env.BASE_URL}${url.replace(/^\//, "")}`;
+  }
+
+  return url;
 }
 
 /**
  * Handler para el evento `onError` de <img>.
- * Si la imagen original falla al cargar (URL rota, 404, etc.),
- * la reemplaza por el placeholder sin entrar en loop.
  */
 export function onImagenError(e) {
   if (e.currentTarget.src.endsWith(PLACEHOLDER_IMG)) return;

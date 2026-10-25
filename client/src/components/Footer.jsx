@@ -1,4 +1,6 @@
-function Footer({ onNavigate }) {
+import { Link } from "react-router-dom";
+
+function Footer() {
   return (
     <footer className="site-footer">
       <div className="container footer-grid">
@@ -15,37 +17,16 @@ function Footer({ onNavigate }) {
             <h4>Navegación</h4>
             <ul>
               <li>
-                <a
-                  href="#inicio"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("inicio");
-                  }}
-                >
-                  Inicio
-                </a>
+                <Link to="/">Inicio</Link>
               </li>
               <li>
-                <a
-                  href="#catalogo"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("catalogo");
-                  }}
-                >
-                  Catálogo
-                </a>
+                <Link to="/productos">Catálogo</Link>
               </li>
               <li>
-                <a
-                  href="#contacto"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("contacto");
-                  }}
-                >
-                  Contacto
-                </a>
+                <Link to="/contacto">Contacto</Link>
+              </li>
+              <li>
+                <Link to="/admin">Admin</Link>
               </li>
             </ul>
           </div>

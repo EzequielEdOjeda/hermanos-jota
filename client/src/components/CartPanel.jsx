@@ -1,4 +1,5 @@
 import { formatearPrecio } from "../utils/format";
+import { getImagenProducto, onImagenError } from "../utils/imagen";
 
 function CartPanel({ abierto, carrito, total, onCerrar, onCambiarCantidad, onQuitar }) {
   return (
@@ -40,18 +41,26 @@ function CartPanel({ abierto, carrito, total, onCerrar, onCambiarCantidad, onQui
             </div>
           ) : (
             carrito.map((item) => (
-              <div className="cart-item" key={item.id}>
+              <div className="cart-item" key={item._id}>
                 <div className="cart-item__image">
-                  <img src={item.imagen} alt={item.nombre} loading="lazy" />
+                  <img
+                    src={getImagenProducto(item)}
+                    alt={item.nombre}
+                    loading="lazy"
+                    onError={onImagenError}
+                  />
                 </div>
                 <div className="cart-item__info">
                   <p className="cart-item__name">{item.nombre}</p>
-                  <span className="cart-item__price">{formatearPrecio(item.precio)}</span>
+                  <span className="cart-item__price">
+                    {" "}
+                    {formatearPrecio(item.precio * item.cantidad)}{" "}
+                  </span>
                   <div className="cart-item__controls">
                     <button
                       className="cart-qty-btn"
                       aria-label="Restar"
-                      onClick={() => onCambiarCantidad(item.id, -1)}
+                      onClick={() => onCambiarCantidad(item._id, -1)}
                     >
                       −
                     </button>
@@ -59,11 +68,11 @@ function CartPanel({ abierto, carrito, total, onCerrar, onCambiarCantidad, onQui
                     <button
                       className="cart-qty-btn"
                       aria-label="Sumar"
-                      onClick={() => onCambiarCantidad(item.id, 1)}
+                      onClick={() => onCambiarCantidad(item._id, 1)}
                     >
                       +
                     </button>
-                    <button className="cart-item__remove" onClick={() => onQuitar(item.id)}>
+                    <button className="cart-item__remove" onClick={() => onQuitar(item._id)}>
                       ✖️
                     </button>
                   </div>

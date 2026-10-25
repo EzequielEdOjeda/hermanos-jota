@@ -1,6 +1,7 @@
+import { Link } from "react-router-dom";
 import ProductList from "./ProductList";
 
-function Home({ productos, cargando, error, onVerDetalle, onAgregar, onNavigate }) {
+function Home({ productos, cargando, error, onAgregar }) {
   const destacados = productos.filter((p) => p.destacado);
 
   return (
@@ -32,16 +33,9 @@ function Home({ productos, cargando, error, onVerDetalle, onAgregar, onNavigate 
               el futuro.
             </p>
             <div className="hero__actions">
-              <a
-                href="#catalogo"
-                className="btn btn-primary"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onNavigate("catalogo");
-                }}
-              >
+              <Link to="/productos" className="btn btn-primary">
                 Ver catálogo
-              </a>
+              </Link>
               <a href="#destacados" className="btn btn-outline">
                 Piezas destacadas
               </a>
@@ -49,7 +43,7 @@ function Home({ productos, cargando, error, onVerDetalle, onAgregar, onNavigate 
 
             <div className="hero__stats">
               <div className="hero__stat">
-                <strong>11</strong>
+                <strong>{productos.length || "—"}</strong>
                 <span>Piezas en catálogo</span>
               </div>
               <div className="hero__stat">
@@ -77,16 +71,9 @@ function Home({ productos, cargando, error, onVerDetalle, onAgregar, onNavigate 
               <p className="eyebrow">Piezas destacadas</p>
               <h2 className="section-title">Lo más elegido</h2>
             </div>
-            <a
-              href="#catalogo"
-              className="product-card__link"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate("catalogo");
-              }}
-            >
+            <Link to="/productos" className="product-card__link">
               Ver catálogo completo →
-            </a>
+            </Link>
           </div>
 
           {cargando && (
@@ -104,9 +91,7 @@ function Home({ productos, cargando, error, onVerDetalle, onAgregar, onNavigate 
             </p>
           )}
 
-          {!cargando && !error && (
-            <ProductList productos={destacados} onVerDetalle={onVerDetalle} onAgregar={onAgregar} />
-          )}
+          {!cargando && !error && <ProductList productos={destacados} onAgregar={onAgregar} />}
         </div>
       </section>
 
@@ -159,16 +144,9 @@ function Home({ productos, cargando, error, onVerDetalle, onAgregar, onNavigate 
             Av. San Juan 2847, Barrio de San Cristóbal, CABA. Lunes a viernes de 10 a 19 h, sábados
             de 10 a 14 h.
           </p>
-          <a
-            href="#contacto"
-            className="btn btn-outline"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate("contacto");
-            }}
-          >
+          <Link to="/contacto" className="btn btn-outline">
             Escribinos
-          </a>
+          </Link>
         </div>
       </section>
     </>

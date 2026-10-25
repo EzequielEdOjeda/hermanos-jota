@@ -1,8 +1,20 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function Login({ onNavigate }) {
+/**
+ * Pantalla de inicio de sesión.
+ *
+ * Nota: todavía no hay un backend de autenticación en este sprint (el
+ * foco acá fue el CRUD de productos con MongoDB), así que el envío es
+ * un placeholder — valida y simula una espera, pero no crea una sesión
+ * real todavía. Queda listo para conectar a un endpoint de auth más
+ * adelante sin tener que tocar el resto de la UI.
+ */
+function Login() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,9 +48,8 @@ function Login({ onNavigate }) {
     try {
       // TODO: reemplazar por la llamada real al backend de autenticación.
       await new Promise((resolve) => setTimeout(resolve, 600));
-      console.log({ email, password, remember });
-      onNavigate?.("inicio");
-    } catch (err) {
+      navigate("/");
+    } catch {
       setFormError("No pudimos iniciar sesión. Probá de nuevo en un momento.");
     } finally {
       setIsSubmitting(false);
@@ -54,15 +65,10 @@ function Login({ onNavigate }) {
             Hermanos Jota
           </div>
 
-          <p className="eyebrow">Bienvenido de nuevo</p>
           <h1 className="section-title auth-card__title">Iniciar sesión</h1>
-          <p className="auth-card__subtitle">
-            Ingresá tus datos para ingresar a tu cuenta.
-          </p>
+          <p className="auth-card__subtitle">Ingresá tus datos para ingresar a tu cuenta.</p>
 
-          {formError && (
-            <div className="form-alert form-alert--error">{formError}</div>
-          )}
+          {formError && <div className="form-alert form-alert--error">{formError}</div>}
 
           <form onSubmit={handleSubmit} noValidate>
             <div className={`form-field ${errors.email ? "has-error" : ""}`}>
@@ -78,35 +84,47 @@ function Login({ onNavigate }) {
               <span className="field-error">{errors.email}</span>
             </div>
 
-            <div
-              className={`form-field ${errors.password ? "has-error" : ""}`}
-            >
+            <div className={`form-field ${errors.password ? "has-error" : ""}`}>
               <label htmlFor="password">Contraseña</label>
               <div className="field-control">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="********"
-                  autoComplete="current-password"
-                />
                 <button
-                  type="button"
                   className="field-toggle"
                   onClick={() => setShowPassword((v) => !v)}
+<<<<<<< HEAD
                   aria-label={
                     showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
                   }
                 >
                   {showPassword ? (
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M4 4l16 16" />
-                      <path d="M10.6 10.7a2.5 2.5 0 0 0 3.5 3.5" />
-                      <path d="M7.4 7.5C4.9 9 3 12 3 12s3.5 6.5 9 6.5c1.6 0 3-.4 4.2-1.1M12 5.5c5.5 0 9 6.5 9 6.5a14.6 14.6 0 0 1-2.1 2.9" />
-                    </svg>
+=======
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showPassword ? (
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="18"
+                      height="18"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
                   ) : (
+<<<<<<< HEAD
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+=======
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="18"
+                      height="18"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+>>>>>>> 031134325e7286e725e22f3d9db1702d99955a96
                       <path d="M3 12s3.5-6.5 9-6.5S21 12 21 12s-3.5 6.5-9 6.5S3 12 3 12Z" />
                       <circle cx="12" cy="12" r="2.5" />
                     </svg>
@@ -125,6 +143,7 @@ function Login({ onNavigate }) {
                 />
                 Recordarme
               </label>
+<<<<<<< HEAD
               <button
                 type="button"
                 className="auth-link auth-link--button"
@@ -139,12 +158,19 @@ function Login({ onNavigate }) {
               className="btn btn-primary btn-full"
               disabled={isSubmitting}
             >
+=======
+              {/* TODO: flujo de "olvidé mi contraseña" (fuera del alcance de este sprint) */}
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-full" disabled={isSubmitting}>
+>>>>>>> 031134325e7286e725e22f3d9db1702d99955a96
               {isSubmitting ? "Ingresando..." : "Ingresar"}
             </button>
           </form>
 
           <p className="auth-card__footer">
             ¿No tenés una cuenta?{" "}
+<<<<<<< HEAD
             <button
               type="button"
               className="auth-link auth-link--button"
@@ -152,6 +178,11 @@ function Login({ onNavigate }) {
             >
               Registrate aquí
             </button>
+=======
+            <Link className="auth-link" to="/register">
+              Registrate aquí
+            </Link>
+>>>>>>> 031134325e7286e725e22f3d9db1702d99955a96
           </p>
         </div>
       </div>
@@ -159,4 +190,8 @@ function Login({ onNavigate }) {
   );
 }
 
+<<<<<<< HEAD
 export default Login;
+=======
+export default Login;
+>>>>>>> 031134325e7286e725e22f3d9db1702d99955a96

@@ -4,6 +4,7 @@
  *   npm run seed:users
  *
  *   admin@hermanosjota.com   / admin123    → rol admin
+ *   editor@hermanosjota.com  / editor123   → rol editor
  *   cliente@hermanosjota.com / cliente123  → rol cliente
  *
  * Si un usuario ya existe (mismo email) se omite, así que se puede correr
@@ -26,6 +27,12 @@ const USUARIOS = [
     email: process.env.SEED_ADMIN_EMAIL || "admin@hermanosjota.com",
     password: process.env.SEED_ADMIN_PASSWORD || "admin123",
     rol: "admin",
+  },
+  {
+    nombre: "Editor de prueba",
+    email: "editor@hermanosjota.com",
+    password: "editor123",
+    rol: "editor",
   },
   {
     nombre: "Cliente de prueba",

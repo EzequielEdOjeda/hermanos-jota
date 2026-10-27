@@ -1,6 +1,47 @@
 import { formatearPrecio } from "../utils/format";
+import { obtenerConfiguracionPublica } from "../services/api";
 
-function CartPanel({ abierto, carrito, total, onCerrar, onCambiarCantidad, onQuitar }) {
+function CartPanel({
+  abierto,
+  carrito,
+  total,
+  onCerrar,
+  onCambiarCantidad,
+  onQuitar,
+  onProcesarPago,
+}) {
+  async function handleProcesarPago() {
+    if (carrito.length === 0) return;
+
+    onProcesarPago?.(); // dispara el overlay global en App
+
+    try {
+      const cfg = await obtenerConfiguracionPublica();
+      const numero = cfg.whatsappNumero || "5493624031997";
+      const mensajeBase = cfg.whatsappMensajeBase || "Hola Hermanos Jota, quiero pagar:";
+
+      const lineas = carrito
+        .map(
+          (item) =>
+            `• ${item.nombre} x${item.cantidad} — ${formatearPrecio(item.precio * item.cantidad)}`,
+        )
+        .join("\n");
+
+      const mensaje = `${mensajeBase}\n\n${lineas}\n\nTotal: ${formatearPrecio(total)}`;
+      const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+
+      // Pequeña pausa para que se vea la animación aunque la red sea rápida.
+      await new Promise((r) => setTimeout(r, 900));
+
+      window.open(url, "_blank", "noopener,noreferrer");
+      onCerrar?.();
+    } catch (error) {
+      console.error("Error al procesar el pago:", error);
+    } finally {
+      onProcesarPago?.("fin");
+    }
+  }
+
   return (
     <div
       className={`cart-overlay${abierto ? " is-open" : ""}`}
@@ -47,8 +88,8 @@ function CartPanel({ abierto, carrito, total, onCerrar, onCambiarCantidad, onQui
                 <div className="cart-item__info">
                   <p className="cart-item__name">{item.nombre}</p>
                   <span className="cart-item__price">
-					  {formatearPrecio(item.precio * item.cantidad)}
-					</span>
+                    {formatearPrecio(item.precio * item.cantidad)}
+                  </span>
                   <div className="cart-item__controls">
                     <button
                       className="cart-qty-btn"
@@ -80,8 +121,12 @@ function CartPanel({ abierto, carrito, total, onCerrar, onCambiarCantidad, onQui
             <span>Total</span>
             <span className="total-price">{formatearPrecio(total)}</span>
           </div>
-          <button className="btn btn-primary" onClick={onCerrar}>
-            Proceder al pago
+          <button
+            className="btn btn-primary"
+            onClick={handleProcesarPago}
+            disabled={carrito.length === 0}
+          >
+            Proceder al Pago
           </button>
         </div>
       </div>

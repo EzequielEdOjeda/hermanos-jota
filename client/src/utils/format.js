@@ -14,8 +14,6 @@ export const CATEGORIAS = [
   { valor: "oficina", etiqueta: "Oficina" },
 ];
 
-// Imagen que se muestra si un producto no tiene `imagenUrl` (por ejemplo, uno
-// creado desde el panel admin sin foto).
 export const IMAGEN_POR_DEFECTO = "/img/logo.svg";
 
 export function imagenDe(producto) {
@@ -25,6 +23,7 @@ export function imagenDe(producto) {
 // Etiquetas legibles para los roles que devuelve la API.
 export const ETIQUETAS_ROL = {
   admin: "Administrador",
+  editor: "Editor",
   cliente: "Cliente",
 };
 

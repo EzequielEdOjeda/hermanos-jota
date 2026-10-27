@@ -4,7 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import { formatearPrecio, imagenDe } from "../utils/format";
 
 function ProductDetail({ producto, cargando, error, onAgregar, onEliminar }) {
-  const { esAdmin } = useAuth();
+  const { usuario } = useAuth();
+  const puedeGestionar = usuario?.rol === "admin" || usuario?.rol === "editor";
   const navigate = useNavigate();
   const [cantidad, setCantidad] = useState(1);
 
@@ -79,16 +80,19 @@ function ProductDetail({ producto, cargando, error, onAgregar, onEliminar }) {
               </div>
 
               <div className="product-detail__info">
-                {esAdmin && (
+                {puedeGestionar && (
                   <div className="admin-bar" role="group" aria-label="Acciones de administrador">
-                    <span className="badge-admin">Admin</span>
+                    {/* ACÁ CAMBIA EL TEXTO SEGÚN EL ROL */}
+                    <span className="badge-admin">
+                      {usuario.rol === "admin" ? "Admin" : "Editor"}
+                    </span>
                     <Link
                       to={`/admin/editar-producto/${producto.id}`}
-                      className="btn btn-outline btn-sm"
+                      className="btn btn-sm btn-editar"
                     >
                       Editar
                     </Link>
-                    <button type="button" className="btn btn-danger btn-sm" onClick={eliminar}>
+                    <button type="button" className="btn btn-sm btn-eliminar" onClick={eliminar}>
                       Eliminar
                     </button>
                   </div>

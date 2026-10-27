@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
@@ -15,8 +15,11 @@ import RutaPrivada from "./components/RutaPrivada";
 import ProductForm from "./components/ProductForm";
 import AdminProductos from "./components/AdminProductos";
 import AdminUsuarios from "./components/AdminUsuarios";
+import ConfiguracionPagos from "./components/ConfiguracionPagos";
 import Perfil from "./components/Perfil";
 import ConfirmDialog from "./components/ConfirmDialog";
+import ProcessingOverlay from "./components/ProcessingOverlay";
+import SplashLoader from "./components/SplashLoader";
 
 import { useAuth } from "./context/AuthContext";
 import { useToast } from "./context/ToastContext";
@@ -28,53 +31,42 @@ import {
 } from "./services/api";
 import { imagenDe } from "./utils/format";
 
-/**
- * Ruta /producto/:id. Busca el producto en la lista que ya tiene cargada App
- * y se lo pasa a ProductDetail. El `key` reinicia la cantidad elegida al
- * pasar de un producto a otro.
- */
-function RutaDetalle({ productos, ...resto }) {
+function RutaDetalle({ productos, cargando, error, ...resto }) {
   const { id } = useParams();
   const producto = productos.find((p) => p.id === id);
-
-  return <ProductDetail key={id} producto={producto} {...resto} />;
+  
+  // Si todavía está cargando la API, mostramos el skeleton
+  if (cargando) return <ProductDetail cargando={true} />;
+  
+  return <ProductDetail key={id} producto={producto} error={error} {...resto} />;
 }
 
-/**
- * App.jsx — componente raíz de la aplicación.
- *
- * Concentra:
- *  - El fetch a la API (GET /api/productos) y sus tres estados
- *    (carga, éxito, error), objetivo #10 de la consigna.
- *  - Las rutas (React Router): públicas (/, /catalogo, /producto/:id,
- *    /contacto, /login, /register) y /admin/*, que solo puede abrir un admin.
- *  - El estado del carrito de compras (objetivo: "Carrito de compras
- *    como estado en App.js, contador en Navbar vía props").
- *  - Las acciones de administrador sobre el catálogo (crear, editar, eliminar),
- *    que llaman a la API con el token de la sesión.
- */
 function App() {
   const { token, logout } = useAuth();
   const { mostrarToast } = useToast();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
+  const [cargandoSplash, setCargandoSplash] = useState(true);
+  const terminarSplash = useCallback(() => {
+    sessionStorage.setItem("splashVisto", "1");
+    setCargandoSplash(false);
+  }, []);
+
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
-  const [confirmacion, setConfirmacion] = useState(null);  
+  const [confirmacion, setConfirmacion] = useState(null);
 
   const [carrito, setCarrito] = useState([]);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
+  const [procesandoPago, setProcesandoPago] = useState(false);
 
-  // Ciclo de vida de la petición a la API: carga -> éxito | error.
   useEffect(() => {
     let activo = true;
-
     async function cargarProductos() {
       setCargando(true);
       setError(null);
-
       try {
         const data = await obtenerProductos();
         if (activo) setProductos(data ?? []);
@@ -84,15 +76,12 @@ function App() {
         if (activo) setCargando(false);
       }
     }
-
     cargarProductos();
-
     return () => {
       activo = false;
     };
   }, []);
 
-  // Al cambiar de página se vuelve al principio.
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [pathname]);
@@ -100,13 +89,11 @@ function App() {
   function agregarAlCarrito(producto, cantidad = 1) {
     setCarrito((prev) => {
       const existente = prev.find((item) => item.id === producto.id);
-
       if (existente) {
         return prev.map((item) =>
           item.id === producto.id ? { ...item, cantidad: item.cantidad + cantidad } : item,
         );
       }
-
       return [
         ...prev,
         {
@@ -118,7 +105,6 @@ function App() {
         },
       ];
     });
-
     mostrarToast(`"${producto.nombre}" se añadió al carrito`);
   }
 
@@ -134,32 +120,22 @@ function App() {
     );
   }
 
-  const cantidadCarrito = carrito.reduce((total, item) => total + item.cantidad, 0);
-  const totalCarrito = carrito.reduce((total, item) => total + item.precio * item.cantidad, 0);
+  const cantidadCarrito = carrito.reduce((t, i) => t + i.cantidad, 0);
+  const totalCarrito = carrito.reduce((t, i) => t + i.precio * i.cantidad, 0);
 
-  // ---------------------------------------------------------------------------
-  // Acciones de administrador
-  // ---------------------------------------------------------------------------
-
-  // Un 401 en medio de una acción protegida significa que el token venció o ya
-  // no vale (por ejemplo, cambió el JWT_SECRET): se cierra la sesión y se pide
-  // ingresar de nuevo.
   function manejarSesionVencida(err) {
     if (err.status !== 401) return false;
-
     logout();
     mostrarToast("Tu sesión venció. Volvé a ingresar.");
     navigate("/login");
     return true;
   }
 
-  /** Crea (sin id) o actualiza (con id) un producto. Devuelve el producto guardado. */
   async function guardarProducto(payload, id) {
     try {
       const guardado = id
         ? await actualizarProducto(id, payload, token)
         : await crearProducto(payload, token);
-
       setProductos((prev) =>
         id ? prev.map((p) => (p.id === id ? guardado : p)) : [...prev, guardado],
       );
@@ -167,33 +143,39 @@ function App() {
       return guardado;
     } catch (err) {
       manejarSesionVencida(err);
-      throw err; // el formulario muestra el mensaje del backend
+      throw err;
     }
   }
 
-  // Se llama al hacer clic en "Eliminar": abre el modal
-	function pedirEliminarProducto(producto) {
-	  setConfirmacion({ producto });
-	}
+  function pedirEliminarProducto(producto) {
+    setConfirmacion({ producto });
+  }
 
-	// Se llama cuando el usuario confirma en el modal
-	async function eliminarProductoDelCatalogo(producto) {
-	  try {
-		await eliminarProducto(producto.id, token);
-		setProductos((prev) => prev.filter((p) => p.id !== producto.id));
-		setCarrito((prev) => prev.filter((item) => item.id !== producto.id));
-		mostrarToast(`"${producto.nombre}" se eliminó del catálogo`);
-		return true;
-	  } catch (err) {
-		if (!manejarSesionVencida(err)) mostrarToast(err.message);
-		return false;
-	  } finally {
-		setConfirmacion(null);
-	  }
-	}
+  async function eliminarProductoDelCatalogo(producto) {
+    try {
+      await eliminarProducto(producto.id, token);
+      setProductos((prev) => prev.filter((p) => p.id !== producto.id));
+      setCarrito((prev) => prev.filter((item) => item.id !== producto.id));
+      mostrarToast(`"${producto.nombre}" se eliminó del catálogo`);
+      return true;
+    } catch (err) {
+      if (!manejarSesionVencida(err)) mostrarToast(err.message);
+      return false;
+    } finally {
+      setConfirmacion(null);
+    }
+  }
+
+  // El CartPanel llama onProcesarPago() al iniciar y onProcesarPago("fin") al terminar.
+  function handleProcesarPago(accion) {
+    if (accion === "fin") setProcesandoPago(false);
+    else setProcesandoPago(true);
+  }
 
   return (
     <>
+      {cargandoSplash && <SplashLoader onFinish={terminarSplash} />}
+
       <Navbar cantidadCarrito={cantidadCarrito} onAbrirCarrito={() => setCarritoAbierto(true)} />
 
       <main>
@@ -237,20 +219,21 @@ function App() {
           <Route path="/contacto" element={<ContactForm />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-		  <Route
-			  path="/perfil"
-			  element={
-				<RutaPrivada>
-				  <Perfil />
-				</RutaPrivada>
-			  }
-			/>
+          <Route
+            path="/perfil"
+            element={
+              <RutaPrivada>
+                <Perfil />
+              </RutaPrivada>
+            }
+          />
 
-          {/* Todo lo que cuelga de /admin exige sesión iniciada con rol admin. */}
-          <Route path="/admin" element={<RutaPrivada soloAdmin />}>
-            <Route index element={<Navigate to="productos" replace />} />
+                    {/* /admin: admin y editor pueden entrar a productos. */}
+          <Route path="/admin" element={<RutaPrivada roles={["admin", "editor"]} />}>
+            <Route index element={<Navigate to="/admin/productos" replace />} />
+
             <Route
-              path="productos"
+              path="/admin/productos"
               element={
                 <AdminProductos
                   productos={productos}
@@ -260,9 +243,9 @@ function App() {
                 />
               }
             />
-            <Route path="usuarios" element={<AdminUsuarios />} />
+
             <Route
-              path="crear-producto"
+              path="/admin/crear-producto"
               element={
                 <ProductForm
                   productos={productos}
@@ -273,7 +256,7 @@ function App() {
               }
             />
             <Route
-              path="editar-producto/:id"
+              path="/admin/editar-producto/:id"
               element={
                 <ProductForm
                   productos={productos}
@@ -283,6 +266,25 @@ function App() {
                 />
               }
             />
+
+            {/* Solo admin: usuarios y configuración de pagos. */}
+            <Route
+              path="/admin/usuarios"
+              element={
+                <RutaPrivada roles={["admin"]}>
+                  <AdminUsuarios />
+                </RutaPrivada>
+              }
+            />
+            <Route
+              path="/admin/pagos"
+              element={
+                <RutaPrivada roles={["admin"]}>
+                  <ConfiguracionPagos />
+                </RutaPrivada>
+              }
+            />
+
             <Route path="*" element={<NotFound />} />
           </Route>
 
@@ -292,13 +294,14 @@ function App() {
 
       <Footer />
 
-            <CartPanel
+      <CartPanel
         abierto={carritoAbierto}
         carrito={carrito}
         total={totalCarrito}
         onCerrar={() => setCarritoAbierto(false)}
         onCambiarCantidad={cambiarCantidadCarrito}
         onQuitar={quitarDelCarrito}
+        onProcesarPago={handleProcesarPago}
       />
 
       <ConfirmDialog
@@ -313,6 +316,8 @@ function App() {
         onConfirmar={() => eliminarProductoDelCatalogo(confirmacion.producto)}
         onCancelar={() => setConfirmacion(null)}
       />
+
+      <ProcessingOverlay visible={procesandoPago} />
     </>
   );
 }

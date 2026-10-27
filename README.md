@@ -1,6 +1,6 @@
 # Hermanos Jota — E-commerce de Muebles (Full Stack)
 
-Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reconstrucción completa del sitio como una aplicación **cliente-servidor real**, con un backend propio en **Node.js + Express + MongoDB** y un frontend en **React** que consume esa API vía `fetch`. Incluye **autenticación con JWT y roles** (administrador / cliente), **panel de administración** con CRUD de productos y gestión de usuarios, y **perfil de usuario** editable.
+Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reconstrucción completa del sitio como una aplicación **cliente-servidor real**, con un backend propio en **Node.js + Express + MongoDB** y un frontend en **React** que consume esa API vía `fetch`. Incluye **autenticación con JWT y roles** (administrador / editor / cliente), **panel de administración** con CRUD de productos, gestión de usuarios y configuración de pagos, **perfil de usuario** editable y **checkout por WhatsApp**.
 
 ![Web](image.png)
 
@@ -32,27 +32,30 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reco
 
 **Hermanos Jota** es un e-commerce de muebles de diseño. La aplicación está dividida en dos proyectos independientes que se ejecutan y se despliegan por separado, pero que conversan entre sí por HTTP:
 
-- **`/backend`** — API REST construida con Node.js, Express y Mongoose (MongoDB). Expone el catálogo de productos (con CRUD solo para administradores), la autenticación con JWT, la gestión de usuarios (solo admins), la edición de perfil y un endpoint de contacto.
+- **`/backend`** — API REST construida con Node.js, Express y Mongoose (MongoDB). Expone el catálogo de productos (con CRUD para administradores y editores), la autenticación con JWT, la gestión de usuarios (solo admins), la configuración de pagos (solo admins), la edición de perfil y un endpoint de contacto.
 - **`/client`** — Aplicación de React (SPA) con React Router que consume esa API y renderiza toda la interfaz de forma dinámica.
 
 ### Funcionalidades principales
 
+- **Inicio animado**: El sitio cuenta con un _Splash Screen_ con el logo de la marca rellenándose en color antes de mostrar la app.
 - **Inicio**: Hero + piezas destacadas, obtenidas desde la API.
 - **Catálogo**: Grilla completa de productos con buscador y filtro por categoría (living, comedor, dormitorio, oficina).
 - **Detalle de producto**: Imagen, descripción, especificaciones técnicas y selector de cantidad, mostrado con renderizado condicional (sin recargar la página).
 - **Carrito de compras**: Panel flotante con contador en la barra de navegación, controles de cantidad, subtotal por ítem y total, manejado 100% con estado de React.
+- **Checkout por WhatsApp**: Al hacer clic en "Proceder al pago" en el carrito, se muestra una animación global de "Procesando pago..." y luego se abre WhatsApp con un mensaje prellenado que detalla los productos, cantidades y el total a pagar. El número de destino se configura desde el panel de admin.
 - **Contacto**: Formulario controlado con validación en el cliente y envío real al backend (`POST /api/contacto`).
 - **Registro e inicio de sesión**: formularios con validación, token JWT persistido y sesión restaurada al recargar la página (`GET /api/auth/me`).
 - **Edición de perfil**: cualquier usuario logueado puede cambiar su nombre y su contraseña desde `/perfil` (`PUT /api/auth/me`).
-- **Roles**: el Navbar muestra _Ingresar / Registrarse_ o un menú de usuario (con badge **Admin** si corresponde). Las rutas `/admin/*` solo se abren con rol `admin`.
-- **Panel de administración de productos** (`/admin/productos`): tabla con miniatura, nombre, categoría, precio, stock y acciones. Botones **Editar** y **Eliminar** por fila, más un botón **+ Nuevo producto**. La eliminación pasa por un **modal de confirmación propio** (no usa `window.confirm`).
-- **Panel de administración de usuarios** (`/admin/usuarios`): tabla con nombre, email, rol y acción para alternar el rol entre `admin` y `cliente`. La sesión se actualiza al instante sin recargar. Un admin **no puede quitarse su propio rol** (protección en backend y en UI).
+- **Roles**: el Navbar muestra _Ingresar / Registrarse_ o un menú de usuario (con badge **Admin** o **Editor** según corresponda). Las rutas `/admin/*` están protegidas por rol.
+- **Panel de administración de productos** (`/admin/productos`): tabla con miniatura, nombre, categoría, precio, stock y acciones. Botones **Editar** y **Eliminar** por fila, más un botón **+ Nuevo producto**. Accesible para roles `admin` y `editor`. La eliminación pasa por un **modal de confirmación propio**.
+- **Panel de administración de usuarios** (`/admin/usuarios`, solo `admin`): tabla con nombre, email, rol y acciones. Permite alternar el rol entre `admin`, `editor` y `cliente`, y **eliminar usuarios**. La sesión se actualiza al instante sin recargar. Un admin no puede quitarse su propio rol ni eliminarse a sí mismo.
+- **Configuración de pagos** (`/admin/pagos`, solo `admin`): formulario para definir el número de WhatsApp que recibe los pedidos y el mensaje base. Se guarda en la base de datos.
 
 ---
 
 ## 📐 Arquitectura del proyecto
 
-```
+```text
 hermanos-jota/
 ├── backend/                  # API REST (Node.js + Express + MongoDB)
 │   ├── server.js             # Punto de entrada: valida el .env, conecta a Mongo y levanta el servidor
@@ -60,12 +63,12 @@ hermanos-jota/
 │       ├── app.js            # Configuración de Express (middlewares y rutas)
 │       ├── config/
 │       │   └── db.js         # Conexión a MongoDB con Mongoose (connectDB)
-│       ├── models/           # Usuario.js y Producto.js (schemas de Mongoose)
+│       ├── models/           # Usuario.js, Producto.js y Configuracion.js (Mongoose)
 │       ├── data/
 │       │   └── productos.js  # Datos iniciales: los usa el seed (ya no es la "base de datos")
-│       ├── controllers/      # Lógica de cada recurso (auth, usuarios, productos, contacto)
+│       ├── controllers/      # Lógica de cada recurso (auth, usuarios, productos, contacto, config)
 │       ├── routes/           # Rutas organizadas con express.Router
-│       ├── middlewares/      # auth (verificarToken / soloAdmin), validarObjectId,
+│       ├── middlewares/      # auth (verificarToken / soloAdmin / soloAdminOEditor), validarObjectId,
 │       │                     # logger, notFound (404) y errorHandler
 │       ├── scripts/          # seed.js (productos) y seedUsuarios.js (usuarios de prueba)
 │       └── utils/            # httpError.js (errores con status HTTP)
@@ -76,9 +79,9 @@ hermanos-jota/
 │       ├── main.jsx          # Punto de entrada: BrowserRouter + ToastProvider + AuthProvider
 │       ├── App.jsx           # Rutas + estado compartido (productos, carrito) + acciones de admin
 │       ├── context/          # AuthContext (sesión JWT) y ToastContext (avisos)
-│       ├── components/       # Navbar, Login, Register, RutaPrivada, ProductForm,
-│       │                     # AdminProductos, AdminUsuarios, Perfil, ConfirmDialog,
-│       │                     # ProductCard, ProductList, ProductDetail, CartPanel, Toast...
+│       ├── components/       # Navbar, Login, Register, RutaPrivada, ProductForm, SplashLoader,
+│       │                     # ProcessingOverlay, AdminProductos, AdminUsuarios, ConfiguracionPagos,
+│       │                     # Perfil, ConfirmDialog, ProductCard, ProductDetail, CartPanel, Toast...
 │       ├── services/
 │       │   └── api.js        # Cliente fetch centralizado hacia el backend
 │       ├── utils/
@@ -97,34 +100,39 @@ hermanos-jota/
 
 ### 🔌 API REST — Endpoints disponibles
 
-| Método   | Endpoint              | Acceso    | Descripción                                                                                          |
-| -------- | --------------------- | --------- | ---------------------------------------------------------------------------------------------------- |
-| `GET`    | `/api`                | Público   | Ruta de salud, útil para confirmar que el servidor está arriba.                                      |
-| `GET`    | `/api/productos`      | Público   | Listado completo de productos.                                                                       |
-| `GET`    | `/api/productos/:id`  | Público   | Un producto por `id`. `400` si el id no es válido, `404` si no existe.                               |
-| `POST`   | `/api/productos`      | **Admin** | Crea un producto (`201`). Guarda en `creadoPor` al admin que lo creó.                                |
-| `PUT`    | `/api/productos/:id`  | **Admin** | Actualiza los campos enviados; el resto queda igual.                                                 |
-| `DELETE` | `/api/productos/:id`  | **Admin** | Elimina el producto.                                                                                 |
-| `POST`   | `/api/auth/register`  | Público   | Crea una cuenta (rol `cliente`).                                                                     |
-| `POST`   | `/api/auth/login`     | Público   | Inicia sesión y devuelve el token.                                                                   |
-| `GET`    | `/api/auth/me`        | Token     | Devuelve el usuario dueño del token.                                                                 |
-| `PUT`    | `/api/auth/me`        | Token     | Actualiza `nombre` y/o `password` del usuario logueado. Requiere `passwordActual` para cambiarla.    |
-| `GET`    | `/api/usuarios`       | **Admin** | Listado de todos los usuarios (sin el hash de la contraseña).                                        |
-| `PATCH`  | `/api/usuarios/:id/rol` | **Admin** | Cambia el rol de un usuario (`admin` ↔ `cliente`). Un admin no puede degradarse a sí mismo.         |
-| `POST`   | `/api/contacto`       | Público   | Recibe `{ nombre, email, mensaje }`, valida en el servidor y responde `201` o `400` con los errores. |
+| Método   | Endpoint                | Acceso           | Descripción                                                                                          |
+| -------- | ----------------------- | ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api`                  | Público          | Ruta de salud, útil para confirmar que el servidor está arriba.                                      |
+| `GET`    | `/api/productos`        | Público          | Listado completo de productos.                                                                       |
+| `GET`    | `/api/productos/:id`    | Público          | Un producto por `id`. `400` si el id no es válido, `404` si no existe.                               |
+| `POST`   | `/api/productos`        | **Admin/Editor** | Crea un producto (`201`). Guarda en `creadoPor` al usuario que lo creó.                              |
+| `PUT`    | `/api/productos/:id`    | **Admin/Editor** | Actualiza los campos enviados; el resto queda igual.                                                 |
+| `DELETE` | `/api/productos/:id`    | **Admin/Editor** | Elimina el producto.                                                                                 |
+| `POST`   | `/api/auth/register`    | Público          | Crea una cuenta (rol `cliente`).                                                                     |
+| `POST`   | `/api/auth/login`       | Público          | Inicia sesión y devuelve el token.                                                                   |
+| `GET`    | `/api/auth/me`          | Token            | Devuelve el usuario dueño del token.                                                                 |
+| `PUT`    | `/api/auth/me`          | Token            | Actualiza `nombre` y/o `password` del usuario logueado. Requiere `passwordActual` para cambiarla.    |
+| `GET`    | `/api/usuarios`         | **Admin**        | Listado de todos los usuarios (sin el hash de la contraseña).                                        |
+| `PATCH`  | `/api/usuarios/:id/rol` | **Admin**        | Cambia el rol (`admin` ↔ `editor` ↔ `cliente`). Un admin no puede degradarse a sí mismo.           |
+| `DELETE` | `/api/usuarios/:id`     | **Admin**        | Elimina un usuario. Un admin no puede eliminarse a sí mismo.                                         |
+| `GET`    | `/api/configuracion`    | **Admin**        | Devuelve el número de WhatsApp y el mensaje base configurados.                                       |
+| `PUT`    | `/api/configuracion`    | **Admin**        | Actualiza el número de WhatsApp y el mensaje base.                                                   |
+| `GET`    | `/api/configuracion/publica`| Público      | Solo devuelve los datos necesarios para armar el link de WhatsApp del carrito.                       |
+| `POST`   | `/api/contacto`         | Público          | Recibe `{ nombre, email, mensaje }`, valida en el servidor y responde `201` o `400` con los errores. |
 
-**Formato de las respuestas:** los productos responden `{ ok: true, data }`; la autenticación, `{ ok: true, usuario, token }`; y cualquier error, siempre `{ ok: false, error: "..." }` (lo arma el `errorHandler` centralizado). Cualquier ruta inexistente devuelve un `404` uniforme gracias al middleware `notFound`.
+**Formato de las respuestas:** los productos y configuraciones responden `{ ok: true, data }`; la autenticación, `{ ok: true, usuario, token }`; y cualquier error, siempre `{ ok: false, error: "..." }`. Cualquier ruta inexistente devuelve un `404` uniforme.
 
-**Códigos de error más comunes:** `400` datos inválidos (incluye un id mal formado) · `401` falta el token, es inválido o venció / credenciales incorrectas · `403` el usuario no es admin · `404` no existe · `409` el correo (o el slug) ya está registrado.
+**Códigos de error más comunes:** `400` datos inválidos (incluye un id mal formado) · `401` falta el token, es inválido o venció / credenciales incorrectas · `403` el usuario no tiene el rol requerido · `404` no existe · `409` el correo (o el slug) ya está registrado.
 
 ### 🔐 Autenticación y roles
 
 La API usa **JWT**: tras iniciar sesión, el cliente envía el token en cada petición protegida con el header `Authorization: Bearer <token>`.
 
-| Rol       | Qué puede hacer                                                                                                  |
-| --------- | ---------------------------------------------------------------------------------------------------------------- |
-| `cliente` | Ver el catálogo, armar el carrito, contactarse y editar su propio perfil. Es el rol de **todo** registro nuevo. |
-| `admin`   | Todo lo anterior + **CRUD de productos** y **gestión de usuarios** (listar y cambiar roles).                    |
+| Rol       | Qué puede hacer                                                                                                                                              |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cliente` | Ver el catálogo, armar el carrito, contactarse y editar su propio perfil. Es el rol de **todo** registro nuevo.                                             |
+| `editor`  | Todo lo del cliente + **CRUD de productos** (`/admin/productos`). **No** puede acceder a la gestión de usuarios ni a la configuración de pagos.              |
+| `admin`   | Todo lo del editor + **gestión de usuarios** (cambiar roles, eliminar) + **configuración de pagos** (número de WhatsApp).                                   |
 
 | Endpoint                  | Body                                    | Respuesta                                                                                      |
 | ------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -135,7 +143,7 @@ La API usa **JWT**: tras iniciar sesión, el cliente envía el token en cada pet
 
 - Las contraseñas se guardan hasheadas con **bcrypt (10 rounds)**; nunca se devuelven en ningún JSON.
 - El token se firma con `{ id, rol }` y `JWT_SECRET`, y vence a los `7d` (configurable con `JWT_EXPIRES`).
-- El rol se **vuelve a leer de la base** en cada petición protegida: si un admin es degradado o eliminado, pierde el acceso de inmediato.
+- El rol se **vuelve a leer de la base** en cada petición protegida: si un usuario es degradado o eliminado, pierde el acceso de inmediato.
 
 ### 👤 Usuarios de prueba
 
@@ -144,6 +152,7 @@ Se crean con `npm run seed:users` (ver más abajo):
 | Rol       | Email                      | Contraseña   |
 | --------- | -------------------------- | ------------ |
 | `admin`   | `admin@hermanosjota.com`   | `admin123`   |
+| `editor`  | `editor@hermanosjota.com`  | `editor123`  |
 | `cliente` | `cliente@hermanosjota.com` | `cliente123` |
 
 > ⚠️ **Son credenciales públicas** (están en este README). Si la base de datos está en internet, definí `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD` en `backend/.env` **antes** de correr `npm run seed:users` para crear un admin con datos propios.
@@ -167,7 +176,7 @@ Si falta `MONGODB_URI` o `JWT_SECRET`, el backend se detiene al arrancar con un 
 cd backend
 npm run seed             # carga los productos de src/data/productos.js (no duplica si ya existen)
 npm run seed -- --reset  # BORRA todos los productos y los vuelve a cargar
-npm run seed:users       # crea el admin y el cliente de prueba (omite los que ya existen)
+npm run seed:users       # crea el admin, el editor y el cliente de prueba (omite los que ya existen)
 ```
 
 ---
@@ -180,10 +189,12 @@ npm run seed:users       # crea el admin y el cliente de prueba (omite los que y
 - **`cors` en el backend.** Como el cliente (`http://localhost:5173`) y la API (`http://localhost:4000`) corren en orígenes distintos durante el desarrollo, se agregó el middleware `cors` para habilitar las peticiones entre ambos. Sin esto, el navegador bloquea el `fetch` por la política de mismo origen.
 - **Endpoint `POST /api/contacto`.** No estaba explícitamente pedido, pero se agregó para que el formulario de contacto también hable con el backend real (usando `express.json()` para parsear el body), en línea con el espíritu del proyecto: "una verdadera aplicación cliente-servidor". Valida los mismos campos tanto en el cliente como en el servidor. Los mensajes **no se persisten**: el endpoint solo demuestra el ciclo completo de una petición POST.
 - **MongoDB (Mongoose) en lugar de datos en memoria.** El catálogo y los usuarios viven en MongoDB (Atlas en producción). `backend/src/data/productos.js` se conserva solo como fuente de datos iniciales para `npm run seed`. El modelo `Producto` incluye los campos del sprint (`nombre`, `descripcion`, `precio`, `stock`, `imagenUrl`, `creadoPor`) más los que el catálogo ya usaba (`slug`, `categoria`, `descripcionCorta`, `medidas`, `materiales`, `acabado`, `peso`, `detalleExtra`, `destacado`). Al sembrar, `imagen` pasa a `imagenUrl` y `descripcionLarga` a `descripcion`.
-- **JWT guardado en `localStorage`.** Es la opción más simple para una SPA con backend en otro dominio (Vercel + Render) y permite restaurar la sesión al recargar. El trade-off conocido es que un XSS podría leer el token; por eso el rol y los permisos se verifican **siempre en el backend** (`verificarToken` + `soloAdmin`) y `RutaPrivada` en el cliente es solo una ayuda de UX.
+- **JWT guardado en `localStorage`.** Es la opción más simple para una SPA con backend en otro dominio (Vercel + Render) y permite restaurar la sesión al recargar. El trade-off conocido es que un XSS podría leer el token; por eso el rol y los permisos se verifican **siempre en el backend** y `RutaPrivada` en el cliente es solo una ayuda de UX.
 - **Respuestas con formato `{ ok, data | error }`.** Los endpoints de productos devuelven `{ ok: true, data }` en lugar del array/objeto "pelado" de las etapas anteriores, para que éxitos y errores tengan la misma forma.
-- **Modal de confirmación propio en lugar de `window.confirm`.** El navegador bloquea la ejecución con el `confirm` nativo y no permite personalizar el estilo. Se implementó un componente `ConfirmDialog` reutilizable, con fondo oscurecido, animación y botones con la identidad de marca. Se usa al eliminar un producto (desde el panel admin, la home, el catálogo y el detalle).
-- **Panel de administración ampliado.** Además del CRUD de productos, se agregó una sección de **gestión de usuarios** (`/admin/usuarios`) que permite listar cuentas y alternar su rol. La actualización del rol se refleja al instante (sin recargar) porque el estado local se actualiza con merge parcial (`{ ...usuario, rol: nuevoRol }`) en lugar de reemplazar el objeto entero. Como salvaguarda, un admin **no puede quitarse a sí mismo el rol** — está bloqueado tanto en el backend como deshabilitado en la UI.
+- **Modal de confirmación propio en lugar de `window.confirm`.** El navegador bloquea la ejecución con el `confirm` nativo y no permite personalizar el estilo. Se implementó un componente `ConfirmDialog` reutilizable, con fondo oscurecido, animación y botones con la identidad de marca. Se usa al eliminar un producto o un usuario.
+- **Rol `editor`.** Se agregó un rol intermedio entre `cliente` y `admin` que solo puede operar sobre productos. El backend aplica `soloAdminOEditor` en las rutas de `/api/productos` y deja `soloAdmin` para `/api/usuarios` y `/api/configuracion`. En el cliente, `RutaPrivada` recibe un array `roles` para declarar qué roles pueden entrar a cada ruta.
+- **Configuración de pagos y Checkout por WhatsApp.** Se creó un modelo `Configuracion` en MongoDB para persistir el número de WhatsApp y el mensaje base, que el admin puede editar desde `/admin/pagos`. El endpoint público `/api/configuracion/publica` expone solo esos datos al cliente. Al hacer clic en "Proceder al pago", el sitio muestra una animación global (`ProcessingOverlay`) y abre un link de `wa.me` con el detalle de los productos, cantidades y el total prellenado.
+- **Splash Loader.** Al iniciar el sitio, se muestra una pantalla de carga animada con el logo de la marca rellenándose de color. Se guarda un flag en `sessionStorage` para que aparezca solo en la primera visita y no interrumpa la navegación interna.
 - **Edición de perfil.** Se agregó `PUT /api/auth/me` para que cualquier usuario logueado pueda actualizar su nombre y, opcionalmente, su contraseña (pidiendo la actual como confirmación). Al guardar, el `AuthContext` actualiza el usuario en memoria para que el Navbar refleje el cambio sin necesidad de recargar.
 - **Tablas admin responsivas.** Las tablas de productos y usuarios van envueltas en un contenedor con `overflow-x: auto` y `min-width` en la tabla, para que en mobile se pueda hacer scroll horizontal sin que se aplasten las columnas.
 - **ESLint Flat Config + Prettier.** Se usó el nuevo formato de configuración de ESLint (`eslint.config.js`), con reglas separadas para el backend (entorno Node) y el cliente (entorno browser + JSX + hooks de React), y `eslint-plugin-prettier` / `eslint-config-prettier` para que Prettier sea la única fuente de verdad sobre el estilo del código.
@@ -197,7 +208,7 @@ Se necesitan **dos terminales** abiertas: una para el backend y otra para el cli
 ### 1. Clonar el repositorio
 
 ```bash
-git clone <URL-del-repositorio>
+git clone https://github.com/EzequielEdOjeda/hermanos-jota/
 cd hermanos-jota
 ```
 

@@ -51,7 +51,7 @@ async function request(path, { token, body, headers, ...options } = {}) {
 
 // ---------------------------------------------------------------------------
 // Productos. La API responde { ok: true, data }; acá se devuelve solo `data`.
-// Las tres últimas son solo para administradores y requieren el token.
+// Las tres últimas las puede usar admin o editor (requieren el token).
 // ---------------------------------------------------------------------------
 
 export async function obtenerProductos() {
@@ -124,4 +124,34 @@ export async function cambiarRolUsuario(id, rol, token) {
 export async function actualizarPerfil(payload, token) {
   const data = await request('/auth/me', { method: 'PUT', body: payload, token })
   return data.usuario
+}
+
+// ---------------------------------------------------------------------------
+// Configuración de pagos (WhatsApp)
+// - obtenerConfiguracionPublica: público, la usa el carrito (sin token).
+// - obtenerConfiguracion / actualizarConfiguracion: solo admin (con token).
+// ---------------------------------------------------------------------------
+
+export async function obtenerConfiguracionPublica() {
+  const { data } = await request("/configuracion/publica");
+  return data;
+}
+
+export async function obtenerConfiguracion(token) {
+  const { data } = await request("/configuracion", { token });
+  return data;
+}
+
+export async function actualizarConfiguracion(payload, token) {
+  const { data } = await request("/configuracion", {
+    method: "PUT",
+    body: payload,
+    token,
+  });
+  return data;
+}
+
+export async function eliminarUsuario(id, token) {
+  const { data } = await request(`/usuarios/${id}`, { method: "DELETE", token });
+  return data;
 }

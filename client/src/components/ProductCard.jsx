@@ -5,10 +5,11 @@ import { formatearPrecio, imagenDe } from "../utils/format";
 /**
  * Tarjeta individual de producto. Recibe el producto y los callbacks de
  * agregar al carrito / eliminar vía props. Los botones Editar y Eliminar
- * solo se muestran si la sesión es de un administrador.
+ * solo se muestran si la sesión es de un administrador o editor.
  */
 function ProductCard({ producto, onAgregar, onEliminar }) {
-  const { esAdmin } = useAuth();
+  const { usuario } = useAuth();
+  const puedeGestionar = usuario?.rol === "admin" || usuario?.rol === "editor";
   const rutaDetalle = `/producto/${producto.id}`;
 
   return (
@@ -34,7 +35,7 @@ function ProductCard({ producto, onAgregar, onEliminar }) {
           </button>
         </div>
 
-        {esAdmin && (
+        {puedeGestionar && (
           <div className="product-card__admin" role="group" aria-label="Acciones de administrador">
             <Link to={`/admin/editar-producto/${producto.id}`} className="card-btn-admin">
               <i className="bi bi-pencil" aria-hidden="true"></i>

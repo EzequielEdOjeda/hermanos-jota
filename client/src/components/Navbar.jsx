@@ -10,7 +10,6 @@ const ENLACES = [
   { to: "/contacto", etiqueta: "Contacto", icono: "bi-envelope" },
 ];
 
-/** logout() + aviso + vuelta al inicio. Lo usan el desplegable y el menú mobile. */
 function useCerrarSesion() {
   const { logout } = useAuth();
   const { mostrarToast } = useToast();
@@ -23,7 +22,6 @@ function useCerrarSesion() {
   };
 }
 
-/** Botones que se ven cuando NO hay sesión. */
 function BotonesInvitado() {
   return (
     <>
@@ -37,18 +35,24 @@ function BotonesInvitado() {
   );
 }
 
-/**
- * Desplegable de usuario (desktop). Patrón "disclosure": un botón con
- * aria-expanded que muestra/oculta el panel. Se cierra con click afuera,
- * con Escape (devolviendo el foco al botón) y al cambiar de ruta.
- */
+/** Badge de rol que se muestra al lado del nombre. */
+function BadgeRol({ rol }) {
+  if (rol === "admin") return <span className="badge-admin">Admin</span>;
+  if (rol === "editor") return <span className="badge-editor">Editor</span>;
+  return null;
+}
+
 function MenuUsuario() {
-  const { usuario, esAdmin } = useAuth();
+  const { usuario } = useAuth();
   const cerrarSesion = useCerrarSesion();
   const { pathname } = useLocation();
   const [abierto, setAbierto] = useState(false);
   const contenedorRef = useRef(null);
   const botonRef = useRef(null);
+
+  const esAdmin = usuario.rol === "admin";
+  const esEditor = usuario.rol === "editor";
+  const puedeGestionarProductos = esAdmin || esEditor;
 
   useEffect(() => {
     setAbierto(false);
@@ -60,7 +64,6 @@ function MenuUsuario() {
     function alTocarFuera(e) {
       if (!contenedorRef.current?.contains(e.target)) setAbierto(false);
     }
-
     function alPresionarTecla(e) {
       if (e.key === "Escape") {
         setAbierto(false);
@@ -84,13 +87,13 @@ function MenuUsuario() {
         className="navbar-user__trigger"
         aria-expanded={abierto}
         aria-controls="menu-usuario"
-        onClick={() => setAbierto((valor) => !valor)}
+        onClick={() => setAbierto((v) => !v)}
       >
         <span className="navbar-user__avatar" aria-hidden="true">
           {inicialDe(usuario.nombre)}
         </span>
         <span className="navbar-user__name">{primerNombre(usuario.nombre)}</span>
-        {esAdmin && <span className="badge-admin">Admin</span>}
+        <BadgeRol rol={usuario.rol} />
         <svg
           className="navbar-user__chevron"
           width="14"
@@ -112,18 +115,27 @@ function MenuUsuario() {
           <div className="dropdown-menu__header">
             <span className="dropdown-menu__name">{usuario.nombre}</span>
             <span className="dropdown-menu__email">{usuario.email}</span>
-            <span className="dropdown-menu__role">{ETIQUETAS_ROL[usuario.rol] ?? usuario.rol}</span>
+            <span className="dropdown-menu__role">
+              {ETIQUETAS_ROL[usuario.rol] ?? usuario.rol}
+            </span>
           </div>
+
+          {puedeGestionarProductos && (
+            <Link to="/admin/productos" className="dropdown-menu__item">
+              <i className="bi bi-box-seam" aria-hidden="true"></i>
+              Gestionar productos
+            </Link>
+          )}
 
           {esAdmin && (
             <>
-              <Link to="/admin/productos" className="dropdown-menu__item">
-                <i className="bi bi-box-seam" aria-hidden="true"></i>
-                Gestionar productos
-              </Link>
               <Link to="/admin/usuarios" className="dropdown-menu__item">
                 <i className="bi bi-people" aria-hidden="true"></i>
                 Gestionar usuarios
+              </Link>
+              <Link to="/admin/pagos" className="dropdown-menu__item">
+                <i className="bi bi-credit-card" aria-hidden="true"></i>
+                Configuración de pagos
               </Link>
             </>
           )}
@@ -143,9 +155,8 @@ function MenuUsuario() {
   );
 }
 
-/** Bloque de sesión dentro del menú hamburguesa (mobile). */
 function SesionMovil() {
-  const { usuario, esAdmin } = useAuth();
+  const { usuario } = useAuth();
   const cerrarSesion = useCerrarSesion();
 
   if (!usuario) {
@@ -156,6 +167,10 @@ function SesionMovil() {
     );
   }
 
+  const esAdmin = usuario.rol === "admin";
+  const esEditor = usuario.rol === "editor";
+  const puedeGestionarProductos = esAdmin || esEditor;
+
   return (
     <div className="nav-session">
       <div className="nav-session__user">
@@ -165,19 +180,26 @@ function SesionMovil() {
         <div className="nav-session__who">
           <span className="nav-session__name">
             {usuario.nombre}
-            {esAdmin && <span className="badge-admin">Admin</span>}
+            <BadgeRol rol={usuario.rol} />
           </span>
-          <span className="nav-session__role">{ETIQUETAS_ROL[usuario.rol] ?? usuario.rol}</span>
+          <span className="nav-session__role">
+            {ETIQUETAS_ROL[usuario.rol] ?? usuario.rol}
+          </span>
         </div>
       </div>
 
+      {puedeGestionarProductos && (
+        <Link to="/admin/productos" className="btn btn-outline btn-sm">
+          Gestionar productos
+        </Link>
+      )}
       {esAdmin && (
         <>
-          <Link to="/admin/productos" className="btn btn-outline btn-sm">
-            Gestionar productos
-          </Link>
           <Link to="/admin/usuarios" className="btn btn-outline btn-sm">
             Gestionar usuarios
+          </Link>
+          <Link to="/admin/pagos" className="btn btn-outline btn-sm">
+            Configuración de pagos
           </Link>
         </>
       )}
@@ -193,25 +215,15 @@ function SesionMovil() {
   );
 }
 
-/**
- * Barra de navegación principal.
- * Recibe el contador del carrito y la acción de abrirlo vía props desde App.
- * Los links usan React Router (NavLink marca solo cuál está activo) y la
- * parte de sesión sale de AuthContext: invitado → Ingresar / Registrarse;
- * con sesión → desplegable con nombre, rol y cierre de sesión.
- */
 function Navbar({ cantidadCarrito, onAbrirCarrito }) {
   const { usuario, cargando } = useAuth();
   const { pathname } = useLocation();
   const [menuAbierto, setMenuAbierto] = useState(false);
 
-  // Al navegar, el menú hamburguesa se cierra solo.
   useEffect(() => {
     setMenuAbierto(false);
   }, [pathname]);
 
-  // Mientras se valida el token guardado y todavía no hay datos del usuario no
-  // se muestra ni "Ingresar" ni el menú, para que no parpadee.
   const verificandoSesion = cargando && !usuario;
 
   return (
@@ -224,7 +236,9 @@ function Navbar({ cantidadCarrito, onAbrirCarrito }) {
 
         <div className="header-actions">
           {!verificandoSesion && (
-            <div className="header-session">{usuario ? <MenuUsuario /> : <BotonesInvitado />}</div>
+            <div className="header-session">
+              {usuario ? <MenuUsuario /> : <BotonesInvitado />}
+            </div>
           )}
 
           <a

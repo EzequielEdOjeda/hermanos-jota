@@ -15,6 +15,7 @@ import NotFound from "./components/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 import Login from "./components/Login";
 import Register from "./components/Register";
+import RelatedProducts from "./components/RelatedProducts";
 
 import { obtenerProductos } from "./services/api";
 
@@ -67,12 +68,25 @@ function App() {
   }
 
   function agregarAlCarrito(producto, cantidad = 1) {
+    const stock = producto.stock ?? Infinity;
+    const enCarrito = carrito.find((item) => item._id === producto._id)?.cantidad ?? 0;
+    const disponible = stock - enCarrito;
+
+    if (disponible <= 0) {
+      mostrarToast(`No hay más unidades de "${producto.nombre}" disponibles`);
+      return;
+    }
+
+    const cantidadFinal = Math.min(cantidad, disponible);
+
     setCarrito((prev) => {
       const existente = prev.find((item) => item._id === producto._id);
 
       if (existente) {
         return prev.map((item) =>
-          item._id === producto._id ? { ...item, cantidad: item.cantidad + cantidad } : item,
+          item._id === producto._id
+            ? { ...item, cantidad: item.cantidad + cantidadFinal, stock }
+            : item,
         );
       }
 
@@ -83,12 +97,17 @@ function App() {
           nombre: producto.nombre,
           precio: producto.precio,
           imagenUrl: producto.imagenUrl,
-          cantidad,
+          stock,
+          cantidad: cantidadFinal,
         },
       ];
     });
 
-    mostrarToast(`"${producto.nombre}" se añadió al carrito`);
+    mostrarToast(
+      cantidadFinal < cantidad
+        ? `Agregamos ${cantidadFinal} de "${producto.nombre}" (máximo según stock)`
+        : `"${producto.nombre}" se añadió al carrito`,
+    );
   }
 
   function quitarDelCarrito(id) {
@@ -98,7 +117,11 @@ function App() {
   function cambiarCantidadCarrito(id, delta) {
     setCarrito((prev) =>
       prev
-        .map((item) => (item._id === id ? { ...item, cantidad: item.cantidad + delta } : item))
+        .map((item) => {
+          if (item._id !== id) return item;
+          const nueva = Math.min(item.cantidad + delta, item.stock ?? Infinity);
+          return { ...item, cantidad: nueva };
+        })
         .filter((item) => item.cantidad > 0),
     );
   }
@@ -137,7 +160,7 @@ function App() {
             }
           />
 
-          <Route path="/productos/:id" element={<ProductDetail onAgregar={agregarAlCarrito} />} />
+          <Route path="/productos/:id" element={<ProductDetail productos={productos} onAgregar={agregarAlCarrito} />} />
 
           <Route path="/contacto" element={<ContactForm />} />
 

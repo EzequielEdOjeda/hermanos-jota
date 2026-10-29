@@ -16,6 +16,8 @@ const VALORES_INICIALES = {
   destacado: false,
 };
 
+const STOCK_MAXIMO = 999;
+
 function validar(valores) {
   const errores = {};
 
@@ -29,8 +31,13 @@ function validar(valores) {
     errores.precio = "El precio no puede ser negativo.";
   }
 
-  if (valores.stock !== "" && Number(valores.stock) < 0) {
-    errores.stock = "El stock no puede ser negativo.";
+  if (valores.stock !== "") {
+    const stock = Number(valores.stock);
+    if (!Number.isInteger(stock) || stock < 0) {
+      errores.stock = "El stock debe ser un número entero, 0 o mayor.";
+    } else if (stock > STOCK_MAXIMO) {
+      errores.stock = `El stock no puede superar ${STOCK_MAXIMO} unidades.`;
+    }
   }
 
   return errores;
@@ -248,6 +255,7 @@ function ProductForm({ modo, onGuardado, onToast }) {
                     id="stock"
                     name="stock"
                     min="0"
+                    max={STOCK_MAXIMO}
                     step="1"
                     value={valores.stock}
                     onChange={manejarCambio}

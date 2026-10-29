@@ -90,17 +90,15 @@ function Login() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="********"
+                  autoComplete="current-password"
+                />
                 <button
+                  type="button"
                   className="field-toggle"
                   onClick={() => setShowPassword((v) => !v)}
-<<<<<<< HEAD
-                  aria-label={
-                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
-                  }
-                >
-                  {showPassword ? (
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-=======
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                 >
                   {showPassword ? (
@@ -111,10 +109,14 @@ function Login() {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M4 4l16 16" />
+                      <path d="M10.6 10.7a2.5 2.5 0 0 0 3.5 3.5" />
+                      <path d="M7.4 7.5C4.9 9 3 12 3 12s3.5 6.5 9 6.5c1.6 0 3-.4 4.2-1.1M12 5.5c5.5 0 9 6.5 9 6.5a14.6 14.6 0 0 1-2.1 2.9" />
+                    </svg>
                   ) : (
-<<<<<<< HEAD
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-=======
                     <svg
                       viewBox="0 0 24 24"
                       width="18"
@@ -124,7 +126,7 @@ function Login() {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
->>>>>>> 031134325e7286e725e22f3d9db1702d99955a96
+                    >
                       <path d="M3 12s3.5-6.5 9-6.5S21 12 21 12s-3.5 6.5-9 6.5S3 12 3 12Z" />
                       <circle cx="12" cy="12" r="2.5" />
                     </svg>
@@ -143,46 +145,19 @@ function Login() {
                 />
                 Recordarme
               </label>
-<<<<<<< HEAD
-              <button
-                type="button"
-                className="auth-link auth-link--button"
-                onClick={() => onNavigate?.("olvide-password")}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary btn-full"
-              disabled={isSubmitting}
-            >
-=======
               {/* TODO: flujo de "olvidé mi contraseña" (fuera del alcance de este sprint) */}
             </div>
 
             <button type="submit" className="btn btn-primary btn-full" disabled={isSubmitting}>
->>>>>>> 031134325e7286e725e22f3d9db1702d99955a96
               {isSubmitting ? "Ingresando..." : "Ingresar"}
             </button>
           </form>
 
           <p className="auth-card__footer">
             ¿No tenés una cuenta?{" "}
-<<<<<<< HEAD
-            <button
-              type="button"
-              className="auth-link auth-link--button"
-              onClick={() => onNavigate?.("register")}
-            >
-              Registrate aquí
-            </button>
-=======
             <Link className="auth-link" to="/register">
               Registrate aquí
             </Link>
->>>>>>> 031134325e7286e725e22f3d9db1702d99955a96
           </p>
         </div>
       </div>
@@ -190,8 +165,4 @@ function Login() {
   );
 }
 
-<<<<<<< HEAD
 export default Login;
-=======
-export default Login;
->>>>>>> 031134325e7286e725e22f3d9db1702d99955a96

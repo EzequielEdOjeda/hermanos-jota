@@ -4,7 +4,6 @@ import { useParams, Link } from "react-router-dom";
 import { formatearPrecio } from "../utils/format";
 import { obtenerProductoPorId } from "../services/api";
 import { getImagenProducto, onImagenError } from "../utils/imagen";
-import RelatedProducts from "./RelatedProducts";
 
 /**
  * Página de detalle de un producto.
@@ -14,7 +13,7 @@ import RelatedProducts from "./RelatedProducts";
  * directamente por URL (compartida, recargada, etc.) sin depender de
  * que /productos ya se haya cargado antes.
  */
-function ProductDetail({ productos = [], onAgregar }) {
+function ProductDetail({ onAgregar }) {
   const { id } = useParams();
 
   const [producto, setProducto] = useState(null);
@@ -81,7 +80,6 @@ function ProductDetail({ productos = [], onAgregar }) {
 
   const stockMaximo = producto.stock > 0 ? producto.stock : 10;
   const sinStock = producto.stock === 0;
-  const ultimasUnidades = producto.stock > 0 && producto.stock <= 5;
 
   return (
     <section className="section">
@@ -113,8 +111,6 @@ function ProductDetail({ productos = [], onAgregar }) {
                 </tr>
               </tbody>
             </table>
-
-            {ultimasUnidades && <p className="stock-warning">¡Últimas unidades disponibles!</p>}
 
             <div className="qty-stepper">
               <label htmlFor="cantidad">Cantidad</label>
@@ -154,9 +150,6 @@ function ProductDetail({ productos = [], onAgregar }) {
             </div>
           </div>
         </div>
-
-        <RelatedProducts producto={producto} productos={productos} onAgregar={onAgregar} />
-
       </div>
     </section>
   );

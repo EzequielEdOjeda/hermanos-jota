@@ -2128,3 +2128,28 @@ input::-webkit-strong-password-auto-fill-button {
   padding: 20%;
   background: var(--color-alabastro);
 }
+
+   /* ==========================================================================
+      DETALLE DE PRODUCTO — productos relacionados y aviso de stock
+      ========================================================================== */
+   .related {
+     margin-top: 4rem;
+     padding-top: 2.5rem;
+     border-top: 1px solid var(--color-border);
+   }
+
+   .related .product-card__media a {
+     display: block;
+     height: 100%;
+   }
+
+   .related .product-card__name a:hover {
+     color: var(--color-siena);
+   }
+
+   .stock-warning {
+     margin: -0.5rem 0 1rem;
+     font-size: 0.85rem;
+     font-weight: 600;
+     color: var(--color-rosa);
+   }

@@ -133,18 +133,6 @@ function Navbar({ cantidadCarrito, onAbrirCarrito }) {
                 Admin
               </NavLink>
             </li>
-            <li>
-              <a
-                href="#login"
-                className={`bi bi-person${vista === "login" ? " is-active" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  navegar("login");
-                }}
-              >
-                Iniciar sesión
-              </a>
-            </li>
           </ul>
         </nav>
       </div>

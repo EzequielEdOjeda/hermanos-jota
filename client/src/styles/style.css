@@ -1484,39 +1484,85 @@ button {
   font-weight: 500;
 }
 
+/* ==========================================================================
+   STEPPER DE CANTIDAD (DETALLE DE PRODUCTO)
+   ========================================================================== */
 .quantity-row {
   display: flex;
+  flex-direction: row;
   align-items: center;
+  justify-content: flex-start;
   gap: 1rem;
   margin: 1.5rem 0;
 }
 
+.quantity-row > span {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
 .quantity-stepper {
   display: inline-flex;
-  align-items: center;
+  align-items: stretch;
+  width: fit-content;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  background: var(--color-white);
+  height: 44px;
 }
 
+/* Estilos base de los botones (Fondo clarito) */
 .quantity-stepper button {
-  background: var(--color-alabastro);
+  width: 44px;
+  height: 100%;
   border: none;
-  width: 38px;
-  height: 38px;
-  font-size: 1.1rem;
+  background: var(--color-alabastro);
   color: var(--color-siena-dark);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
+/* HOVER: Al pasar el mouse por CUALQUIERA de los dos botones, se pintan de marrón */
+.quantity-stepper button:hover:not(:disabled) {
+  background: var(--color-siena);
+  color: var(--color-white);
+}
+
+/* Input del medio */
 .quantity-stepper input {
-  width: 44px;
-  text-align: center;
+  width: 56px;
+  height: 100%;
   border: none;
   border-left: 1px solid var(--color-border);
   border-right: 1px solid var(--color-border);
-  height: 38px;
+  text-align: center;
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  background: var(--color-white);
+  padding: 0;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.quantity-stepper input::-webkit-outer-spin-button,
+.quantity-stepper input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.quantity-stepper button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .badge-row {
@@ -3047,4 +3093,87 @@ button {
   .admin-form__actions .btn {
     width: 100%;
   }
+}
+
+/* Fondo sutil para la sección de relacionados */
+.section--related {
+  background-color: var(--color-crema);
+}
+
+/* ==========================================================================
+   SELECTOR DE CANTIDAD (ESTILO FINAL)
+   ========================================================================== */
+.qty-stepper {
+  display: flex;
+  flex-direction: column; /* Pone "Cantidad" arriba y los botones abajo */
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.qty-stepper > label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.qty-stepper__controls {
+  display: inline-flex;
+  align-items: stretch;
+  width: fit-content;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-white);
+  height: 44px;
+}
+
+/* Estilos base: ambos botones tienen fondo claro */
+.qty-stepper__controls button {
+  width: 44px;
+  height: 100%;
+  border: none;
+  background: var(--color-alabastro);
+  color: var(--color-siena-dark);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* Hover: se ponen marrones al pasar el mouse */
+.qty-stepper__controls button:hover:not(:disabled) {
+  background: var(--color-siena);
+  color: var(--color-white);
+}
+
+.qty-stepper__controls input {
+  width: 56px;
+  height: 100%;
+  border: none;
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  background: var(--color-white);
+  padding: 0;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.qty-stepper__controls input::-webkit-outer-spin-button,
+.qty-stepper__controls input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-stepper__controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

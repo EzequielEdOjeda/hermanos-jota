@@ -38,7 +38,7 @@ function RutaDetalle({ productos, cargando, error, ...resto }) {
   // Si todavía está cargando la API, mostramos el skeleton
   if (cargando) return <ProductDetail cargando={true} />;
   
-  return <ProductDetail key={id} producto={producto} error={error} {...resto} />;
+  return <ProductDetail key={id} producto={producto} productos={productos} error={error} {...resto} />;
 }
 
 function App() {

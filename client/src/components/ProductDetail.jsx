@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { formatearPrecio, imagenDe } from "../utils/format";
+import ProductCard from "./ProductCard"; 
 
-function ProductDetail({ producto, cargando, error, onAgregar, onEliminar }) {
+function ProductDetail({ producto, productos, cargando, error, onAgregar, onEliminar }) {
   const { usuario } = useAuth();
   const puedeGestionar = usuario?.rol === "admin" || usuario?.rol === "editor";
   const navigate = useNavigate();
@@ -27,8 +28,6 @@ function ProductDetail({ producto, cargando, error, onAgregar, onEliminar }) {
     if (eliminado) navigate("/catalogo");
   }
 
-  // Un producto creado desde el panel admin puede no tener todos los datos
-  // técnicos: solo se muestran las filas que tienen contenido.
   const ficha = producto
     ? [
         ["Medidas", producto.medidas],
@@ -38,6 +37,13 @@ function ProductDetail({ producto, cargando, error, onAgregar, onEliminar }) {
       ].filter(([, valor]) => valor)
     : [];
 
+  // Filtramos productos de la misma categoría, excluyendo el actual, y tomamos hasta 4
+  const productosRelacionados = productos
+    ? productos.filter((p) => p.categoria === producto?.categoria && p.id !== producto?.id).slice(0, 4)
+    : [];
+	
+  const sinStock = producto?.stock <= 0;
+	
   return (
     <>
       <div className="container">
@@ -51,17 +57,13 @@ function ProductDetail({ producto, cargando, error, onAgregar, onEliminar }) {
         <div className="container">
           {/* Estado de carga */}
           {cargando && (
-            <div
-              className="skeleton-grid"
-              style={{ gridTemplateColumns: "1fr 1fr" }}
-              aria-hidden="true"
-            >
+            <div className="skeleton-grid" style={{ gridTemplateColumns: "1fr 1fr" }} aria-hidden="true">
               <div className="skeleton-card"></div>
               <div className="skeleton-card" style={{ aspectRatio: "auto" }}></div>
             </div>
           )}
 
-          {/* Estado de error: id inválido o producto inexistente */}
+          {/* Estado de error */}
           {!cargando && (error || !producto) && (
             <p className="state-message">
               No encontramos ese producto. <Link to="/catalogo">Volvé al catálogo</Link>.
@@ -82,14 +84,10 @@ function ProductDetail({ producto, cargando, error, onAgregar, onEliminar }) {
               <div className="product-detail__info">
                 {puedeGestionar && (
                   <div className="admin-bar" role="group" aria-label="Acciones de administrador">
-                    {/* ACÁ CAMBIA EL TEXTO SEGÚN EL ROL */}
                     <span className="badge-admin">
                       {usuario.rol === "admin" ? "Admin" : "Editor"}
                     </span>
-                    <Link
-                      to={`/admin/editar-producto/${producto.id}`}
-                      className="btn btn-sm btn-editar"
-                    >
+                    <Link to={`/admin/editar-producto/${producto.id}`} className="btn btn-sm btn-editar">
                       Editar
                     </Link>
                     <button type="button" className="btn btn-sm btn-eliminar" onClick={eliminar}>
@@ -106,36 +104,40 @@ function ProductDetail({ producto, cargando, error, onAgregar, onEliminar }) {
                 </p>
 
                 {ficha.length > 0 && (
-                  <table className="spec-table">
-                    <tbody>
-                      {ficha.map(([titulo, valor]) => (
-                        <tr key={titulo}>
-                          <th scope="row">{titulo}</th>
-                          <td>{valor}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+				  <table className="spec-table">
+					<tbody>
+					  {ficha.map(([titulo, valor]) => (
+						<tr key={titulo}>
+						  <th scope="row">{titulo}</th>
+						  <td>{valor}</td>
+						</tr>
+					  ))}
+					  <tr>
+						<th>Categoría</th>
+						<td>{producto.categoria}</td>
+					  </tr>
+					  <tr>
+						<th>Stock disponible</th>
+						<td>
+						  <span style={{ color: sinStock ? "var(--color-error)" : "var(--color-verde)", fontWeight: "600" }}>
+							{sinStock ? "Sin stock" : `${producto.stock} unidades`}
+						  </span>
+						</td>
+					  </tr>
+					</tbody>
+				  </table>
+				)}
 
-                <div className="quantity-row">
-                  <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>Cantidad</span>
-                  <div className="quantity-stepper">
-                    <button type="button" aria-label="Restar unidad" onClick={restar}>
-                      −
-                    </button>
-                    <input type="number" value={cantidad} min="1" max="10" readOnly />
-                    <button type="button" aria-label="Sumar unidad" onClick={sumar}>
-                      +
-                    </button>
-                  </div>
-                </div>
+                <div className="qty-stepper">
+				  <label>Cantidad</label>
+				  <div className="qty-stepper__controls">
+					<button type="button" aria-label="Restar unidad" onClick={restar}>−</button>
+					<input type="number" value={cantidad} min="1" max="10" readOnly />
+					<button type="button" aria-label="Sumar unidad" onClick={sumar}>+</button>
+				  </div>
+				</div>
 
-                <button
-                  className="btn btn-primary btn-full"
-                  type="button"
-                  onClick={agregarAlCarrito}
-                >
+                <button className="btn btn-primary btn-full" type="button" onClick={agregarAlCarrito}>
                   Añadir al carrito
                 </button>
 
@@ -149,6 +151,29 @@ function ProductDetail({ producto, cargando, error, onAgregar, onEliminar }) {
           )}
         </div>
       </section>
+
+      {/* SECCIÓN DE PRODUCTOS RELACIONADOS (NUEVA) */}
+      {!cargando && producto && productosRelacionados.length > 0 && (
+        <section className="section section--related" style={{ borderTop: "1px solid var(--color-border)", paddingTop: "3rem", paddingBottom: "3rem" }}>
+          <div className="container">
+            <p className="eyebrow">También te puede gustar</p>
+            <h2 className="section-title" style={{ textTransform: "uppercase", marginBottom: "2rem" }}>
+              Más de {producto.categoria}
+            </h2>
+            
+            <div className="product-grid">
+              {productosRelacionados.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  producto={p}
+                  onAgregar={onAgregar}
+                  onEliminar={onEliminar}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </>
   );
 }

@@ -21,7 +21,7 @@ export function ToastProvider({ children }) {
   const [mensaje, setMensaje] = useState("");
   const temporizador = useRef(null);
 
-  const mostrarToast = useCallback((texto, duracion = 2200) => {
+  const mostrarToast = useCallback((texto, duracion = 3000) => {
     clearTimeout(temporizador.current); // un toast nuevo reemplaza al anterior
     setMensaje(texto);
     temporizador.current = setTimeout(() => setMensaje(""), duracion);

@@ -17,11 +17,13 @@ import AdminProductos from "./components/AdminProductos";
 import AdminUsuarios from "./components/AdminUsuarios";
 import ConfiguracionPagos from "./components/ConfiguracionPagos";
 import Perfil from "./components/Perfil";
+import MisPedidos from "./components/MisPedidos";
 import ConfirmDialog from "./components/ConfirmDialog";
 import ProcessingOverlay from "./components/ProcessingOverlay";
 import SplashLoader from "./components/SplashLoader";
 
 import { useAuth } from "./context/AuthContext";
+import { useCart } from "./context/CartContext";
 import { useToast } from "./context/ToastContext";
 import {
   actualizarProducto,
@@ -29,21 +31,31 @@ import {
   eliminarProducto,
   obtenerProductos,
 } from "./services/api";
-import { imagenDe } from "./utils/format";
 
 function RutaDetalle({ productos, cargando, error, ...resto }) {
   const { id } = useParams();
   const producto = productos.find((p) => p.id === id);
-  
+
   // Si todavía está cargando la API, mostramos el skeleton
   if (cargando) return <ProductDetail cargando={true} />;
-  
-  return <ProductDetail key={id} producto={producto} productos={productos} error={error} {...resto} />;
+
+  return (
+    <ProductDetail key={id} producto={producto} productos={productos} error={error} {...resto} />
+  );
 }
 
 function App() {
   const { token, logout } = useAuth();
   const { mostrarToast } = useToast();
+  const {
+    carrito,
+    cantidadCarrito,
+    totalCarrito,
+    agregarAlCarrito,
+    quitarDelCarrito,
+    cambiarCantidadCarrito,
+    vaciarCarrito,
+  } = useCart();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -58,7 +70,6 @@ function App() {
   const [error, setError] = useState(null);
   const [confirmacion, setConfirmacion] = useState(null);
 
-  const [carrito, setCarrito] = useState([]);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [procesandoPago, setProcesandoPago] = useState(false);
 
@@ -85,43 +96,6 @@ function App() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [pathname]);
-
-  function agregarAlCarrito(producto, cantidad = 1) {
-    setCarrito((prev) => {
-      const existente = prev.find((item) => item.id === producto.id);
-      if (existente) {
-        return prev.map((item) =>
-          item.id === producto.id ? { ...item, cantidad: item.cantidad + cantidad } : item,
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: producto.id,
-          nombre: producto.nombre,
-          precio: producto.precio,
-          imagen: imagenDe(producto),
-          cantidad,
-        },
-      ];
-    });
-    mostrarToast(`"${producto.nombre}" se añadió al carrito`);
-  }
-
-  function quitarDelCarrito(id) {
-    setCarrito((prev) => prev.filter((item) => item.id !== id));
-  }
-
-  function cambiarCantidadCarrito(id, delta) {
-    setCarrito((prev) =>
-      prev
-        .map((item) => (item.id === id ? { ...item, cantidad: item.cantidad + delta } : item))
-        .filter((item) => item.cantidad > 0),
-    );
-  }
-
-  const cantidadCarrito = carrito.reduce((t, i) => t + i.cantidad, 0);
-  const totalCarrito = carrito.reduce((t, i) => t + i.precio * i.cantidad, 0);
 
   function manejarSesionVencida(err) {
     if (err.status !== 401) return false;
@@ -155,7 +129,7 @@ function App() {
     try {
       await eliminarProducto(producto.id, token);
       setProductos((prev) => prev.filter((p) => p.id !== producto.id));
-      setCarrito((prev) => prev.filter((item) => item.id !== producto.id));
+      quitarDelCarrito(producto.id);
       mostrarToast(`"${producto.nombre}" se eliminó del catálogo`);
       return true;
     } catch (err) {
@@ -219,6 +193,7 @@ function App() {
           <Route path="/contacto" element={<ContactForm />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/registro" element={<Navigate to="/register" replace />} />
           <Route
             path="/perfil"
             element={
@@ -227,8 +202,16 @@ function App() {
               </RutaPrivada>
             }
           />
+          <Route
+            path="/mis-pedidos"
+            element={
+              <RutaPrivada>
+                <MisPedidos />
+              </RutaPrivada>
+            }
+          />
 
-                    {/* /admin: admin y editor pueden entrar a productos. */}
+          {/* /admin: admin y editor pueden entrar a productos. */}
           <Route path="/admin" element={<RutaPrivada roles={["admin", "editor"]} />}>
             <Route index element={<Navigate to="/admin/productos" replace />} />
 
@@ -301,6 +284,7 @@ function App() {
         onCerrar={() => setCarritoAbierto(false)}
         onCambiarCantidad={cambiarCantidadCarrito}
         onQuitar={quitarDelCarrito}
+        onVaciar={vaciarCarrito}
         onProcesarPago={handleProcesarPago}
       />
 

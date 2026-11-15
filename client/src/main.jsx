@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
+import { CartProvider } from "./context/CartContext.jsx";
 import "./styles/style.css";
 
 // Las rutas (/, /catalogo, /login, /admin/...) están declaradas en App.jsx,
@@ -13,7 +14,9 @@ createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <ToastProvider>
         <AuthProvider>
-          <App />
+          <CartProvider>
+            <App />
+          </CartProvider>
         </AuthProvider>
       </ToastProvider>
     </BrowserRouter>

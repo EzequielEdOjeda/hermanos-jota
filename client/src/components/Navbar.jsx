@@ -140,6 +140,13 @@ function MenuUsuario() {
             </>
           )}
 
+          {usuario.rol === "cliente" &&(
+            <Link to="/mis-pedidos" className="dropdown-menu__item">
+              <i className="bi bi-bag" aria-hidden="true"></i>
+              Mis pedidos
+            </Link>
+          )}
+
           <Link to="/perfil" className="dropdown-menu__item">
             <i className="bi bi-person-gear" aria-hidden="true"></i>
             Editar perfil
@@ -202,6 +209,12 @@ function SesionMovil() {
             Configuración de pagos
           </Link>
         </>
+      )}
+
+      {usuario.rol === "cliente" && (
+        <Link to="/mis-pedidos" className="btn btn-outline btn-sm">
+          Mis pedidos
+        </Link>
       )}
 
       <Link to="/perfil" className="btn btn-outline btn-sm">

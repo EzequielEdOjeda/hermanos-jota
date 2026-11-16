@@ -155,3 +155,17 @@ export async function eliminarUsuario(id, token) {
   const { data } = await request(`/usuarios/${id}`, { method: "DELETE", token });
   return data;
 }
+
+// ---------------------------------------------------------------------------
+// Pedidos (requieren sesión)
+// El backend responde directo con el pedido / el arreglo de pedidos.
+// ---------------------------------------------------------------------------
+
+/** items: [{ producto: "<id>", cantidad: 2 }] */
+export function crearPedido(items, token) {
+  return request("/pedidos", { method: "POST", body: { items }, token });
+}
+
+export function obtenerMisPedidos(token) {
+  return request("/pedidos/mis-pedidos", { token });
+}

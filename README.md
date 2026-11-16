@@ -1,6 +1,6 @@
 # Hermanos Jota — E-commerce de Muebles (Full Stack)
 
-Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reconstrucción completa del sitio como una aplicación **cliente-servidor real**, con un backend propio en **Node.js + Express + MongoDB** y un frontend en **React** que consume esa API vía `fetch`. Incluye **autenticación con JWT y roles** (administrador / editor / cliente), **panel de administración** con CRUD de productos, gestión de usuarios y configuración de pagos, **perfil de usuario** editable y **checkout por WhatsApp**.
+Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reconstrucción completa del sitio como una aplicación **cliente-servidor real**, con un backend propio en **Node.js + Express + MongoDB** y un frontend en **React** que consume esa API vía `fetch`. Incluye **autenticación con JWT y roles** (administrador / editor / cliente), **panel de administración** con CRUD de productos, gestión de usuarios y configuración de pagos, **perfil de usuario** editable **carrito global con pedidos guardados en la base de datos** (checkout con sesión obligatoria y aviso opcional por WhatsApp).
 
 ![Web](image.png)
 
@@ -23,7 +23,7 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reco
 | ------------------------- |
 | Ojeda Ezequiel Edgardo    |
 | Tobías Alí Torres Ochoa   |
-| Olea Dana Liz             |
+| Olea Dana Liz Florencia   |
 | Bustos Peña Juliana Belen |
 
 ---
@@ -32,7 +32,7 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reco
 
 **Hermanos Jota** es un e-commerce de muebles de diseño. La aplicación está dividida en dos proyectos independientes que se ejecutan y se despliegan por separado, pero que conversan entre sí por HTTP:
 
-- **`/backend`** — API REST construida con Node.js, Express y Mongoose (MongoDB). Expone el catálogo de productos (con CRUD para administradores y editores), la autenticación con JWT, la gestión de usuarios (solo admins), la configuración de pagos (solo admins), la edición de perfil y un endpoint de contacto.
+- **`/backend`** — API REST construida con Node.js, Express y Mongoose (MongoDB). Expone el catálogo de productos (con CRUD para administradores y editores), la autenticación con JWT, la gestión de usuarios (solo admins), la configuración de pagos (solo admins), la edición de perfil, los pedidos (creación e historial por usuario) y un endpoint de contacto.
 - **`/client`** — Aplicación de React (SPA) con React Router que consume esa API y renderiza toda la interfaz de forma dinámica.
 
 ### Funcionalidades principales
@@ -41,8 +41,9 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reco
 - **Inicio**: Hero + piezas destacadas, obtenidas desde la API.
 - **Catálogo**: Grilla completa de productos con buscador y filtro por categoría (living, comedor, dormitorio, oficina).
 - **Detalle de producto**: Imagen, descripción, especificaciones técnicas y selector de cantidad, mostrado con renderizado condicional (sin recargar la página).
-- **Carrito de compras**: Panel flotante con contador en la barra de navegación, controles de cantidad, subtotal por ítem y total, manejado 100% con estado de React.
-- **Checkout por WhatsApp**: Al hacer clic en "Proceder al pago" en el carrito, se muestra una animación global de "Procesando pago..." y luego se abre WhatsApp con un mensaje prellenado que detalla los productos, cantidades y el total a pagar. El número de destino se configura desde el panel de admin.
+- **Carrito de compras**: Panel flotante con contador en la barra de navegación, controles de cantidad, subtotal por ítem y total. El estado vive en `CartContext`; la cantidad de cada producto no puede superar su stock y cada usuario conserva su propio carrito.
+- **Finalizar compra**: el botón del carrito exige sesión iniciada (si no, redirige a `/login`). Al confirmar, se guarda el pedido en la base de datos (`POST /api/pedidos`), se vacía el carrito y se muestra una confirmación. Después, un botón opcional **"Seguir por WhatsApp"** abre `wa.me` con un mensaje prellenado con los productos, cantidades y total; el número de destino se configura desde el panel de admin. Las cuentas `admin` y `editor` no realizan compras.
+- **Mis pedidos** (`/mis-pedidos`, ruta protegida): historial de compras del usuario logueado, del más nuevo al más viejo, con fecha, estado, productos y total (`GET /api/pedidos/mis-pedidos`). El link aparece en el menú solo para clientes.
 - **Contacto**: Formulario controlado con validación en el cliente y envío real al backend (`POST /api/contacto`).
 - **Registro e inicio de sesión**: formularios con validación, token JWT persistido y sesión restaurada al recargar la página (`GET /api/auth/me`).
 - **Edición de perfil**: cualquier usuario logueado puede cambiar su nombre y su contraseña desde `/perfil` (`PUT /api/auth/me`).
@@ -63,10 +64,10 @@ hermanos-jota/
 │       ├── app.js            # Configuración de Express (middlewares y rutas)
 │       ├── config/
 │       │   └── db.js         # Conexión a MongoDB con Mongoose (connectDB)
-│       ├── models/           # Usuario.js, Producto.js y Configuracion.js (Mongoose)
+│       ├── models/           # Usuario.js, Producto.js, Configuracion.js y Pedido.js (Mongoose)
 │       ├── data/
 │       │   └── productos.js  # Datos iniciales: los usa el seed (ya no es la "base de datos")
-│       ├── controllers/      # Lógica de cada recurso (auth, usuarios, productos, contacto, config)
+│       ├── controllers/      # Lógica de cada recurso (auth, usuarios, productos, pedidos, contacto, config)
 │       ├── routes/           # Rutas organizadas con express.Router
 │       ├── middlewares/      # auth (verificarToken / soloAdmin / soloAdminOEditor), validarObjectId,
 │       │                     # logger, notFound (404) y errorHandler
@@ -76,12 +77,12 @@ hermanos-jota/
 ├── client/                   # Frontend (React + Vite + React Router)
 │   ├── index.html
 │   └── src/
-│       ├── main.jsx          # Punto de entrada: BrowserRouter + ToastProvider + AuthProvider
-│       ├── App.jsx           # Rutas + estado compartido (productos, carrito) + acciones de admin
-│       ├── context/          # AuthContext (sesión JWT) y ToastContext (avisos)
+│       ├── main.jsx          # Punto de entrada: BrowserRouter + providers (Toast, Auth y Cart)
+│       ├── App.jsx           # Rutas + estado de productos + acciones de admin
+│       ├── context/          # AuthContext (sesión JWT), CartContext (carrito) y ToastContext (avisos)
 │       ├── components/       # Navbar, Login, Register, RutaPrivada, ProductForm, SplashLoader,
 │       │                     # ProcessingOverlay, AdminProductos, AdminUsuarios, ConfiguracionPagos,
-│       │                     # Perfil, ConfirmDialog, ProductCard, ProductDetail, CartPanel, Toast...
+│       │                     # Perfil, MisPedidos, ConfirmDialog, ProductCard, ProductDetail, CartPanel, Toast...
 │       ├── services/
 │       │   └── api.js        # Cliente fetch centralizado hacia el backend
 │       ├── utils/
@@ -118,11 +119,13 @@ hermanos-jota/
 | `GET`    | `/api/configuracion`    | **Admin**        | Devuelve el número de WhatsApp y el mensaje base configurados.                                       |
 | `PUT`    | `/api/configuracion`    | **Admin**        | Actualiza el número de WhatsApp y el mensaje base.                                                   |
 | `GET`    | `/api/configuracion/publica`| Público      | Solo devuelve los datos necesarios para armar el link de WhatsApp del carrito.                       |
+| `POST`   | `/api/pedidos`          | Token            | Crea un pedido `{ items: [{ producto, cantidad }] }` (`201`). El servidor valida los productos y el stock y calcula el total. |
+| `GET`    | `/api/pedidos/mis-pedidos` | Token         | Pedidos del usuario logueado, del más nuevo al más viejo.                                            |
 | `POST`   | `/api/contacto`         | Público          | Recibe `{ nombre, email, mensaje }`, valida en el servidor y responde `201` o `400` con los errores. |
 
-**Formato de las respuestas:** los productos y configuraciones responden `{ ok: true, data }`; la autenticación, `{ ok: true, usuario, token }`; y cualquier error, siempre `{ ok: false, error: "..." }`. Cualquier ruta inexistente devuelve un `404` uniforme.
+**Formato de las respuestas:** los productos y configuraciones responden `{ ok: true, data }`; la autenticación, `{ ok: true, usuario, token }`; y cualquier error, siempre `{ ok: false, error: "..." }`. Los pedidos (`/api/pedidos`) responden directamente con el pedido o el arreglo de pedidos, sin el envoltorio `{ ok, data }`. Cualquier ruta inexistente devuelve un `404` uniforme.
 
-**Códigos de error más comunes:** `400` datos inválidos (incluye un id mal formado) · `401` falta el token, es inválido o venció / credenciales incorrectas · `403` el usuario no tiene el rol requerido · `404` no existe · `409` el correo (o el slug) ya está registrado.
+**Códigos de error más comunes:** `400` datos inválidos (incluye un id mal formado) · `401` falta el token, es inválido o venció / credenciales incorrectas · `403` el usuario no tiene el rol requerido · `404` no existe · `409` el correo (o el slug) ya está registrado, o no hay stock suficiente para un pedido.
 
 ### 🔐 Autenticación y roles
 
@@ -130,8 +133,8 @@ La API usa **JWT**: tras iniciar sesión, el cliente envía el token en cada pet
 
 | Rol       | Qué puede hacer                                                                                                                                              |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `cliente` | Ver el catálogo, armar el carrito, contactarse y editar su propio perfil. Es el rol de **todo** registro nuevo.                                             |
-| `editor`  | Todo lo del cliente + **CRUD de productos** (`/admin/productos`). **No** puede acceder a la gestión de usuarios ni a la configuración de pagos.              |
+| `cliente` | Ver el catálogo, armar el carrito, **finalizar compras** y ver sus pedidos, contactarse y editar su propio perfil. Es el rol de **todo** registro nuevo.                                             |
+| `editor`  | Todo lo del cliente (excepto comprar) + **CRUD de productos** (`/admin/productos`). **No** puede acceder a la gestión de usuarios ni a la configuración de pagos.              |
 | `admin`   | Todo lo del editor + **gestión de usuarios** (cambiar roles, eliminar) + **configuración de pagos** (número de WhatsApp).                                   |
 
 | Endpoint                  | Body                                    | Respuesta                                                                                      |
@@ -184,8 +187,8 @@ npm run seed:users       # crea el admin, el editor y el cliente de prueba (omit
 ## 📝 Decisiones tomadas
 
 - **Vite en lugar de Create React App.** La consigna original sugería `create-react-app`, pero esa herramienta está **deprecada y sin mantenimiento activo** por parte de Meta. Elegimos **Vite** porque cumple exactamente los mismos objetivos pedagógicos (componentes, `useState`, props, eventos, `.map`/`keys`, renderizado condicional y `fetch`), con arranque y build considerablemente más rápidos y sin warnings de dependencias desactualizadas.
-- **React Router (`react-router-dom`).** En las etapas anteriores la navegación se resolvía con un estado (`vista`) y renderizado condicional, sin librería de ruteo. Para el sprint de login y roles hacían falta **URLs reales** (`/login`, `/register`, `/admin/*`, `/perfil`) y **rutas protegidas** (`RutaPrivada`), así que se migró a React Router. Las rutas están declaradas en `App.jsx`, que sigue concentrando el estado compartido (productos y carrito). `vercel.json` ya redirige todas las rutas a `index.html`, así que los links directos funcionan en producción.
-- **Carrito 100% en estado de React (sin `localStorage`).** La versión anterior (sin backend) persistía el carrito en `localStorage`. En esta etapa el objetivo explícito es practicar `useState`/props, así que el carrito vive únicamente en `App.js` y se reinicia al recargar la página. Es un trade-off consciente: menos "persistencia real", más foco en el objetivo de aprendizaje de la consigna.
+- **React Router (`react-router-dom`).** En las etapas anteriores la navegación se resolvía con un estado (`vista`) y renderizado condicional, sin librería de ruteo. Para el sprint de login y roles hacían falta **URLs reales** (`/login`, `/register`, `/admin/*`, `/perfil`) y **rutas protegidas** (`RutaPrivada`), así que se migró a React Router. Las rutas están declaradas en `App.jsx`, que concentra el estado de productos; la sesión vive en `AuthContext` y el carrito en `CartContext`. `vercel.json` ya redirige todas las rutas a `index.html`, así que los links directos funcionan en producción.
+- **Carrito global con Context API y persistencia por usuario.** El carrito vive en `CartContext` (junto a `AuthContext` y `ToastContext`). Cada usuario logueado tiene su propio carrito guardado en `localStorage` (clave por id de usuario): al cerrar sesión se vacía la pantalla, y al volver a ingresar se recupera el de esa persona; nadie ve el carrito de otra cuenta. Un invitado que ya agregó productos y luego inicia sesión los conserva. La cantidad de cada producto está limitada por su stock y se avisa con un mensaje al llegar al tope.
 - **`cors` en el backend.** Como el cliente (`http://localhost:5173`) y la API (`http://localhost:4000`) corren en orígenes distintos durante el desarrollo, se agregó el middleware `cors` para habilitar las peticiones entre ambos. Sin esto, el navegador bloquea el `fetch` por la política de mismo origen.
 - **Endpoint `POST /api/contacto`.** No estaba explícitamente pedido, pero se agregó para que el formulario de contacto también hable con el backend real (usando `express.json()` para parsear el body), en línea con el espíritu del proyecto: "una verdadera aplicación cliente-servidor". Valida los mismos campos tanto en el cliente como en el servidor. Los mensajes **no se persisten**: el endpoint solo demuestra el ciclo completo de una petición POST.
 - **MongoDB (Mongoose) en lugar de datos en memoria.** El catálogo y los usuarios viven en MongoDB (Atlas en producción). `backend/src/data/productos.js` se conserva solo como fuente de datos iniciales para `npm run seed`. El modelo `Producto` incluye los campos del sprint (`nombre`, `descripcion`, `precio`, `stock`, `imagenUrl`, `creadoPor`) más los que el catálogo ya usaba (`slug`, `categoria`, `descripcionCorta`, `medidas`, `materiales`, `acabado`, `peso`, `detalleExtra`, `destacado`). Al sembrar, `imagen` pasa a `imagenUrl` y `descripcionLarga` a `descripcion`.
@@ -193,7 +196,9 @@ npm run seed:users       # crea el admin, el editor y el cliente de prueba (omit
 - **Respuestas con formato `{ ok, data | error }`.** Los endpoints de productos devuelven `{ ok: true, data }` en lugar del array/objeto "pelado" de las etapas anteriores, para que éxitos y errores tengan la misma forma.
 - **Modal de confirmación propio en lugar de `window.confirm`.** El navegador bloquea la ejecución con el `confirm` nativo y no permite personalizar el estilo. Se implementó un componente `ConfirmDialog` reutilizable, con fondo oscurecido, animación y botones con la identidad de marca. Se usa al eliminar un producto o un usuario.
 - **Rol `editor`.** Se agregó un rol intermedio entre `cliente` y `admin` que solo puede operar sobre productos. El backend aplica `soloAdminOEditor` en las rutas de `/api/productos` y deja `soloAdmin` para `/api/usuarios` y `/api/configuracion`. En el cliente, `RutaPrivada` recibe un array `roles` para declarar qué roles pueden entrar a cada ruta.
-- **Configuración de pagos y Checkout por WhatsApp.** Se creó un modelo `Configuracion` en MongoDB para persistir el número de WhatsApp y el mensaje base, que el admin puede editar desde `/admin/pagos`. El endpoint público `/api/configuracion/publica` expone solo esos datos al cliente. Al hacer clic en "Proceder al pago", el sitio muestra una animación global (`ProcessingOverlay`) y abre un link de `wa.me` con el detalle de los productos, cantidades y el total prellenado.
+- **Configuración de pagos y Checkout por WhatsApp.** Se creó un modelo `Configuracion` en MongoDB para persistir el número de WhatsApp y el mensaje base, que el admin puede editar desde `/admin/pagos`. El endpoint público `/api/configuracion/publica` expone solo esos datos al cliente. "Finalizar compra" exige sesión (si no, redirige a `/login`), guarda el pedido, vacía el carrito y muestra una confirmación, con una animación global (`ProcessingOverlay`) mientras se procesa. El aviso por WhatsApp es opcional: después de guardar, un botón abre un link de `wa.me` con el detalle prellenado. Las cuentas `admin` y `editor` no realizan compras.
+- **Pedidos en MongoDB.** Modelo `Pedido` con usuario, ítems, total y estado. Cada ítem guarda una copia del nombre y el precio al momento de la compra, para que el historial no cambie si después se edita o elimina el producto. `POST /api/pedidos` y `GET /api/pedidos/mis-pedidos` requieren token. El cliente solo envía ids y cantidades: el servidor busca los productos, valida el stock y calcula el total, para que nadie pueda alterar precios desde el navegador. Estas rutas devuelven el pedido (o el arreglo) directamente, sin el envoltorio `{ ok, data }`.
+- **Mis pedidos.** La ruta `/mis-pedidos`, protegida con `RutaPrivada`, muestra el historial del usuario logueado; el link del menú aparece solo para clientes. `/registro` redirige a `/register`.
 - **Splash Loader.** Al iniciar el sitio, se muestra una pantalla de carga animada con el logo de la marca rellenándose de color. Se guarda un flag en `sessionStorage` para que aparezca solo en la primera visita y no interrumpa la navegación interna.
 - **Edición de perfil.** Se agregó `PUT /api/auth/me` para que cualquier usuario logueado pueda actualizar su nombre y, opcionalmente, su contraseña (pidiendo la actual como confirmación). Al guardar, el `AuthContext` actualiza el usuario en memoria para que el Navbar refleje el cambio sin necesidad de recargar.
 - **Tablas admin responsivas.** Las tablas de productos y usuarios van envueltas en un contenedor con `overflow-x: auto` y `min-width` en la tabla, para que en mobile se pueda hacer scroll horizontal sin que se aplasten las columnas.
@@ -218,7 +223,7 @@ cd hermanos-jota
 cd backend
 npm install
 cp .env.example .env      # completá MONGODB_URI y JWT_SECRET (ver "Variables de entorno")
-npm run seed:users         # crea el admin y el cliente de prueba
+npm run seed:users         # crea el admin, el editor y el cliente de prueba
 npm run seed               # carga los productos en MongoDB
 npm run dev                # o "npm start" para modo producción
 ```
@@ -247,7 +252,7 @@ cp .env.example .env      # define VITE_API_URL=http://localhost:4000/api
 npm run dev
 ```
 
-La aplicación queda disponible en **http://localhost:5173**. Con el backend corriendo en paralelo, el catálogo, el detalle de producto, el formulario de contacto, el registro/inicio de sesión, la edición de perfil y el panel de administración van a funcionar de punta a punta.
+La aplicación queda disponible en **http://localhost:5173**. Con el backend corriendo en paralelo, el catálogo, el detalle de producto, el formulario de contacto, el registro/inicio de sesión, la compra con su historial de pedidos, la edición de perfil y el panel de administración van a funcionar de punta a punta.
 
 > Si cambiás el puerto del backend, actualizá `VITE_API_URL` en `client/.env` para que apunte al puerto correcto.
 
@@ -261,7 +266,7 @@ npm run preview    # sirve ese build localmente para probarlo
 
 ### ☁️ Despliegue (Render + MongoDB Atlas)
 
-Después de este sprint el backend necesita tres variables en Render: `MONGODB_URI`, `JWT_SECRET` y `JWT_EXPIRES`. La guía completa (crear el cluster en Atlas, habilitar la red, variables en Render, correr los seeds y verificar) está en [`docs/RENDER-MONGODB.txt`](docs/RENDER-MONGODB.txt). Desplegá **backend y frontend juntos**: el formato de las respuestas de `/api/productos` cambió y el cliente nuevo ya lo contempla.
+Después de este sprint el backend necesita tres variables en Render: `MONGODB_URI`, `JWT_SECRET` y `JWT_EXPIRES`. La guía completa (crear el cluster en Atlas, habilitar la red, variables en Render, correr los seeds y verificar) está en [`docs/RENDER-MONGODB.txt`](docs/RENDER-MONGODB.txt). Desplegá **backend y frontend juntos**: el formato de las respuestas de `/api/productos` cambió y el cliente nuevo ya lo contempla. Los pedidos se guardan en la colección `pedidos`, que MongoDB crea sola con la primera compra (no hace falta seed).
 
 ---
 
@@ -320,10 +325,10 @@ Un commit que no respete este formato es **rechazado automáticamente** por el h
 | Tecnología                          | Uso                                                            |
 | ----------------------------------- | -------------------------------------------------------------- |
 | **Node.js + Express**               | API REST del backend                                           |
-| **MongoDB + Mongoose**              | Base de datos de productos y usuarios (modelos y validaciones) |
+| **MongoDB + Mongoose**              | Base de datos de productos, usuarios y pedidos (modelos y validaciones) |
 | **jsonwebtoken + bcryptjs**         | Sesiones con JWT y hash de contraseñas                         |
 | **cors**                            | Habilita las peticiones del cliente (otro origen) hacia la API |
-| **React 19 + Vite**                 | Interfaz de usuario, componentes y estado                      |
+| **React 19 + Vite**                 | Interfaz de usuario, componentes y estado (Context API)                      |
 | **React Router**                    | Rutas del cliente y rutas protegidas por rol                   |
 | **ESLint (Flat Config) + Prettier** | Calidad y formato de código                                    |
 | **Husky + lint-staged**             | Automatización de controles de calidad antes de cada commit    |

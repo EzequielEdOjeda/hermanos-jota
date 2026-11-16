@@ -40,7 +40,7 @@ function CartPanel({
 
     // Las cuentas de administración no compran (y no tienen "Mis pedidos").
     if (usuario?.rol === "admin" || usuario?.rol === "editor") {
-      mostrarToast("Las cuentas de administración no pueden realizar compras");
+      mostrarToast("Cambia a una cuenta cliente para comprar");
       return;
     }
 

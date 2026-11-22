@@ -46,6 +46,7 @@ Proyecto integrador para el programa **Full Stack Developer** del **ITBA**. Reco
 - **Mis pedidos** (`/mis-pedidos`, ruta protegida): historial de compras del usuario logueado, del más nuevo al más viejo, con fecha, estado, productos y total (`GET /api/pedidos/mis-pedidos`). El link aparece en el menú solo para clientes.
 - **Contacto**: Formulario controlado con validación en el cliente y envío real al backend (`POST /api/contacto`).
 - **Registro e inicio de sesión**: formularios con validación, token JWT persistido y sesión restaurada al recargar la página (`GET /api/auth/me`).
+- **Login con Google** (opcional): botón "Continuar con Google" en `/login` y `/register`. Las cuentas nuevas se crean con rol `cliente`; si el correo ya tenía cuenta con contraseña, se vincula. En `/perfil`, las cuentas de Google no muestran el cambio de contraseña.
 - **Edición de perfil**: cualquier usuario logueado puede cambiar su nombre y su contraseña desde `/perfil` (`PUT /api/auth/me`).
 - **Roles**: el Navbar muestra _Ingresar / Registrarse_ o un menú de usuario (con badge **Admin** o **Editor** según corresponda). Las rutas `/admin/*` están protegidas por rol.
 - **Panel de administración de productos** (`/admin/productos`): tabla con miniatura, nombre, categoría, precio, stock y acciones. Botones **Editar** y **Eliminar** por fila, más un botón **+ Nuevo producto**. Accesible para roles `admin` y `editor`. La eliminación pasa por un **modal de confirmación propio**.
@@ -65,9 +66,11 @@ hermanos-jota/
 │       ├── config/
 │       │   └── db.js         # Conexión a MongoDB con Mongoose (connectDB)
 │       ├── models/           # Usuario.js, Producto.js, Configuracion.js y Pedido.js (Mongoose)
+|       |                     #(con googleId opcional en Usuario)
 │       ├── data/
 │       │   └── productos.js  # Datos iniciales: los usa el seed (ya no es la "base de datos")
-│       ├── controllers/      # Lógica de cada recurso (auth, usuarios, productos, pedidos, contacto, config)
+│       ├── controllers/      # Lógica de cada recurso (auth, google, usuarios, productos, pedidos, contacto,
+|       |                     # config)
 │       ├── routes/           # Rutas organizadas con express.Router
 │       ├── middlewares/      # auth (verificarToken / soloAdmin / soloAdminOEditor), validarObjectId,
 │       │                     # logger, notFound (404) y errorHandler
@@ -80,7 +83,7 @@ hermanos-jota/
 │       ├── main.jsx          # Punto de entrada: BrowserRouter + providers (Toast, Auth y Cart)
 │       ├── App.jsx           # Rutas + estado de productos + acciones de admin
 │       ├── context/          # AuthContext (sesión JWT), CartContext (carrito) y ToastContext (avisos)
-│       ├── components/       # Navbar, Login, Register, RutaPrivada, ProductForm, SplashLoader,
+│       ├── components/       # Navbar, BotonGoogle, Login, Register, RutaPrivada, ProductForm, SplashLoader,
 │       │                     # ProcessingOverlay, AdminProductos, AdminUsuarios, ConfiguracionPagos,
 │       │                     # Perfil, MisPedidos, ConfirmDialog, ProductCard, ProductDetail, CartPanel, Toast...
 │       ├── services/
@@ -118,7 +121,8 @@ hermanos-jota/
 | `DELETE` | `/api/usuarios/:id`     | **Admin**        | Elimina un usuario. Un admin no puede eliminarse a sí mismo.                                         |
 | `GET`    | `/api/configuracion`    | **Admin**        | Devuelve el número de WhatsApp y el mensaje base configurados.                                       |
 | `PUT`    | `/api/configuracion`    | **Admin**        | Actualiza el número de WhatsApp y el mensaje base.                                                   |
-| `GET`    | `/api/configuracion/publica`| Público      | Solo devuelve los datos necesarios para armar el link de WhatsApp del carrito.                       |
+| `GET`    | `/api/configuracion/publica`| Público      | Solo devuelve los datos necesarios para armar el link de WhatsApp del carrito. 
+| `POST`   | `/api/auth/google`      | Público          | Recibe `{ credential }` (ID token de Google), lo verifica y responde `{ ok, usuario, token }`.        |                      |
 | `POST`   | `/api/pedidos`          | Token            | Crea un pedido `{ items: [{ producto, cantidad }] }` (`201`). El servidor valida los productos y el stock y calcula el total. |
 | `GET`    | `/api/pedidos/mis-pedidos` | Token         | Pedidos del usuario logueado, del más nuevo al más viejo.                                            |
 | `POST`   | `/api/contacto`         | Público          | Recibe `{ nombre, email, mensaje }`, valida en el servidor y responde `201` o `400` con los errores. |
@@ -165,7 +169,10 @@ Se crean con `npm run seed:users` (ver más abajo):
 | Variable                                   | Dónde   | Descripción                                                                                |
 | ------------------------------------------ | ------- | ------------------------------------------------------------------------------------------ |
 | `PORT`                                     | backend | Puerto de la API (por defecto `4000`; Render lo define solo).                              |
-| `MONGODB_URI`                              | backend | Cadena de conexión a MongoDB (local o Atlas). **Obligatoria.**                             |
+| `MONGODB_URI`                              | backend | Cadena de conexión a MongoDB (local o Atlas). 
+| `GOOGLE_CLIENT_ID`                         | backend | _Opcional_: ID de cliente de Google OAuth. Sin esta variable, el endpoint de Google responde un error claro y el login común sigue funcionando. |
+| `VITE_GOOGLE_CLIENT_ID`                    | client  | _Opcional_: el mismo ID de cliente (es público). Sin esta variable, el botón de Google no se muestra.                                           |
+**Obligatoria.**                             |
 | `JWT_SECRET`                               | backend | Secreto con el que se firman los tokens. **Obligatorio**; usá un string largo y aleatorio. |
 | `JWT_EXPIRES`                              | backend | Vigencia del token (por defecto `7d`).                                                     |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | backend | _Opcionales_: admin propio para `npm run seed:users`.                                      |
@@ -203,6 +210,7 @@ npm run seed:users       # crea el admin, el editor y el cliente de prueba (omit
 - **Edición de perfil.** Se agregó `PUT /api/auth/me` para que cualquier usuario logueado pueda actualizar su nombre y, opcionalmente, su contraseña (pidiendo la actual como confirmación). Al guardar, el `AuthContext` actualiza el usuario en memoria para que el Navbar refleje el cambio sin necesidad de recargar.
 - **Tablas admin responsivas.** Las tablas de productos y usuarios van envueltas en un contenedor con `overflow-x: auto` y `min-width` en la tabla, para que en mobile se pueda hacer scroll horizontal sin que se aplasten las columnas.
 - **ESLint Flat Config + Prettier.** Se usó el nuevo formato de configuración de ESLint (`eslint.config.js`), con reglas separadas para el backend (entorno Node) y el cliente (entorno browser + JSX + hooks de React), y `eslint-plugin-prettier` / `eslint-config-prettier` para que Prettier sea la única fuente de verdad sobre el estilo del código.
+- **Login con Google (OAuth 2.0 + OpenID Connect) desde el front.** No estaba en la consigna: se agregó como extra. El navegador obtiene un **ID token** con el botón de Google (`@react-oauth/google`) y lo envía a `POST /api/auth/google`; el backend lo verifica con `google-auth-library` (firma, vencimiento y que fue emitido para nuestra aplicación), busca o crea el usuario y devuelve **nuestro propio JWT**, así el resto de la app (roles, rutas protegidas, `Authorization: Bearer`) no cambia. Se eligió este flujo en lugar del de redirección por backend porque el front (Vercel) y la API (Render) están en dominios distintos: solo hace falta declarar los orígenes autorizados en Google Cloud, sin URI de callback, y no se usa el Client Secret. El `googleId` no se expone en las respuestas: el modelo solo informa `conGoogle` para ocultar el cambio de contraseña. Las variables son opcionales: sin ellas el botón no aparece y todo lo demás funciona.
 
 ---
 
@@ -334,6 +342,7 @@ Un commit que no respete este formato es **rechazado automáticamente** por el h
 | **Husky + lint-staged**             | Automatización de controles de calidad antes de cada commit    |
 | **Commitlint**                      | Estandarización de los mensajes de commit                      |
 | **Git & GitHub**                    | Control de versiones y trabajo colaborativo                    |
+| **google-auth-library / @react-oauth/google** | Verificación del ID token en el backend y botón de login con Google en el cliente |
 
 ---
 

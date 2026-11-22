@@ -5,6 +5,7 @@ import AuthField from "./AuthField";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { primerNombre } from "../utils/format";
+import BotonGoogle from "./BotonGoogle";
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -96,6 +97,7 @@ function Login() {
       subtitulo="Ingresá con tu cuenta de Hermanos Jota."
       pie={
         <>
+          <BotonGoogle />
           ¿No tenés cuenta?{" "}
           <Link to="/register" className="login-link">
             Registrate

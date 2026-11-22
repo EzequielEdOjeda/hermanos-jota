@@ -24,7 +24,7 @@ export default function Perfil() {
     if (nombre.trim().length < 3) {
       return setError('El nombre debe tener al menos 3 caracteres')
     }
-    if (passwordNueva) {
+    if (!usuario?.conGoogle && passwordNueva) {
       if (!passwordActual) return setError('Ingresá tu contraseña actual para cambiarla')
       if (passwordNueva.length < 6) return setError('La nueva contraseña debe tener al menos 6 caracteres')
       if (passwordNueva !== passwordRepetir) return setError('Las contraseñas nuevas no coinciden')
@@ -33,7 +33,7 @@ export default function Perfil() {
     setGuardando(true)
     try {
       const payload = { nombre: nombre.trim() }
-      if (passwordNueva) {
+      if (!usuario?.conGoogle && passwordNueva) {
         payload.passwordActual = passwordActual
         payload.passwordNueva = passwordNueva
       }
@@ -81,37 +81,48 @@ export default function Perfil() {
           <small className="form-hint">El email no se puede modificar.</small>
         </label>
 
-        <h2 className="perfil-form__section">Cambiar contraseña (opcional)</h2>
+        {usuario.conGoogle ? (
+          <>
+            <h2 className="perfil-form__section">Contraseña</h2>
+            <p className="form-hint">
+              Iniciaste sesión con Google, así que tu contraseña se administra desde tu cuenta de Google.
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className="perfil-form__section">Cambiar contraseña (opcional)</h2>
 
-        <label className="form-field">
-          <span>Contraseña actual</span>
-          <input
-            type="password"
-            value={passwordActual}
-            onChange={(e) => setPasswordActual(e.target.value)}
-            autoComplete="current-password"
-          />
-        </label>
+            <label className="form-field">
+              <span>Contraseña actual</span>
+              <input
+                type="password"
+                value={passwordActual}
+                onChange={(e) => setPasswordActual(e.target.value)}
+                autoComplete="current-password"
+              />
+            </label>
 
-        <label className="form-field">
-          <span>Nueva contraseña</span>
-          <input
-            type="password"
-            value={passwordNueva}
-            onChange={(e) => setPasswordNueva(e.target.value)}
-            autoComplete="new-password"
-          />
-        </label>
+            <label className="form-field">
+              <span>Nueva contraseña</span>
+              <input
+                type="password"
+                value={passwordNueva}
+                onChange={(e) => setPasswordNueva(e.target.value)}
+                autoComplete="new-password"
+              />
+            </label>
 
-        <label className="form-field">
-          <span>Repetir nueva contraseña</span>
-          <input
-            type="password"
-            value={passwordRepetir}
-            onChange={(e) => setPasswordRepetir(e.target.value)}
-            autoComplete="new-password"
-          />
-        </label>
+            <label className="form-field">
+              <span>Repetir nueva contraseña</span>
+              <input
+                type="password"
+                value={passwordRepetir}
+                onChange={(e) => setPasswordRepetir(e.target.value)}
+                autoComplete="new-password"
+              />
+            </label>
+          </>
+        )}
 
         {error && <p className="form-error">{error}</p>}
 

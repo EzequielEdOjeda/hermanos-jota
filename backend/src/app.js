@@ -11,6 +11,7 @@ import contactoRouter from "./routes/contacto.routes.js";
 import usuarioRouter from "./routes/usuario.routes.js";
 import configuracionRouter from "./routes/configuracion.js";
 import pedidosRouter from "./routes/pedidos.routes.js";
+import googleRouter from "./routes/google.routes.js";
 
 const app = express();
 
@@ -31,7 +32,7 @@ app.use("/api/contacto", contactoRouter);
 app.use("/api/usuarios", usuarioRouter);
 app.use("/api/configuracion", configuracionRouter);
 app.use("/api/pedidos", pedidosRouter);
-
+app.use("/api/auth/google", googleRouter);
 // --- 404 + errores (siempre al final) ---
 app.use(notFound);
 app.use(errorHandler);

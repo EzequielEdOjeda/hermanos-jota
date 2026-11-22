@@ -65,10 +65,12 @@ hermanos-jota/
 │       ├── app.js            # Configuración de Express (middlewares y rutas)
 │       ├── config/
 │       │   └── db.js         # Conexión a MongoDB con Mongoose (connectDB)
-│       ├── models/           # Usuario.js, Producto.js, Configuracion.js y Pedido.js (Mongoose)(con googleId opcional en Usuario)
+│       ├── models/           # Usuario.js, Producto.js, Configuracion.js y Pedido.js (Mongoose)
+|       |                     #(con googleId opcional en Usuario)
 │       ├── data/
 │       │   └── productos.js  # Datos iniciales: los usa el seed (ya no es la "base de datos")
-│       ├── controllers/      # Lógica de cada recurso (auth, google, usuarios, productos, pedidos, contacto, config)
+│       ├── controllers/      # Lógica de cada recurso (auth, google, usuarios, productos, pedidos, contacto,
+|       |                     # config)
 │       ├── routes/           # Rutas organizadas con express.Router
 │       ├── middlewares/      # auth (verificarToken / soloAdmin / soloAdminOEditor), validarObjectId,
 │       │                     # logger, notFound (404) y errorHandler

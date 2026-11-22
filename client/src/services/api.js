@@ -169,3 +169,7 @@ export function crearPedido(items, token) {
 export function obtenerMisPedidos(token) {
   return request("/pedidos/mis-pedidos", { token });
 }
+
+export function loginConGoogle(credential) {
+  return request("/auth/google", { method: "POST", body: { credential } });
+}

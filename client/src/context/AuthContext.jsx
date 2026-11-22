@@ -114,6 +114,11 @@ export function AuthProvider({ children }) {
     [abrirSesion],
   );
 
+  const loginConGoogle = useCallback(
+    async (credential) => abrirSesion(await api.loginConGoogle(credential)),
+    [abrirSesion],
+  );
+
   const logout = useCallback(() => {
     borrarSesion();
     setToken(null);
@@ -127,6 +132,7 @@ export function AuthProvider({ children }) {
       cargando,
       login,
       register,
+      loginConGoogle,
       logout,
 	  actualizarUsuarioEnSesion,
       esAdmin: usuario?.rol === "admin",
